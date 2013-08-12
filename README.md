@@ -21,4 +21,4 @@ Version 1.0
 
 ##Licence
 
-See LICENCE.md
+See LICENSE.md
