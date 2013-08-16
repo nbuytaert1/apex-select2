@@ -17,7 +17,7 @@ More information and downloads can be found [here](http://apex.oracle.com/pls/ap
 
 ##Current Stable Version
 
-Version 1.1
+Version 1.2
 
 ##Licence
 
