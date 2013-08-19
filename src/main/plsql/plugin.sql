@@ -488,7 +488,11 @@ begin
                           tags: []
                        });';
       else
-        l_onload_code := l_onload_code || ' item.html("");';
+        if (p_item.lov_display_null) then
+          l_onload_code := l_onload_code || ' item.html("<option></option>");';
+        else
+          l_onload_code := l_onload_code || ' item.html("");';
+        end if;
       end if;
 
       l_onload_code := l_onload_code || ' item.select2("data", null);
