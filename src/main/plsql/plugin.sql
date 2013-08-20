@@ -27,7 +27,8 @@ begin
     end if;
     l_attr := p_param_name || ': ' || nvl(l_param_value, p_param_value);
     if (p_include_comma) then
-      l_attr := l_attr || ',';
+      l_attr := '
+        ' || l_attr || ',';
     end if;
   else
     l_attr := '';
@@ -190,7 +191,8 @@ begin
   l_lov := get_lov(p_item);
 
   if (p_include_key) then
-    l_tags_option := 'tags: [';
+    l_tags_option := '
+        tags: [';
 
     for i in 1 .. l_lov(gco_lov_display_col).count loop
       if (p_item.escape_output) then
@@ -246,10 +248,11 @@ return apex_plugin.t_page_item_render_result is
   l_select_on_blur          gt_string := p_item.attribute_07;
   l_search_logic            gt_string := p_item.attribute_08;
   l_null_optgroup_label_cmp gt_string := p_item.attribute_09;
+  l_width                   gt_string := p_item.attribute_10;
 
-  l_value                gt_string;
-  l_display_values       apex_application_global.vc_arr2;
-  l_multiselect          gt_string;
+  l_value          gt_string;
+  l_display_values apex_application_global.vc_arr2;
+  l_multiselect    gt_string;
 
   l_item_jq                    gt_string := apex_plugin_util.page_item_names_to_jquery(p_item.name);
   l_cascade_parent_items_jq    gt_string := apex_plugin_util.page_item_names_to_jquery(p_item.lov_cascade_parent_items);
@@ -282,6 +285,10 @@ return apex_plugin.t_page_item_render_result is
       l_placeholder := '';
     end if;
 
+    if (l_width is null) then
+      l_width := 'element';
+    end if;
+
     if (l_rapid_selection is null) then
       l_rapid_selection := '';
     else
@@ -296,13 +303,13 @@ return apex_plugin.t_page_item_render_result is
 
     l_code := '
       $("' || l_item_jq || '").select2({' ||
+        add_js_attr('width', l_width, true) ||
+        add_js_attr('placeholder', l_placeholder, true) ||
+        add_js_attr('allowClear', 'true') ||
         add_js_attr('minimumInputLength', l_min_input_length) ||
         add_js_attr('maximumInputLength', l_max_input_length) ||
         add_js_attr('minimumResultsForSearch', l_min_results_for_search) ||
         add_js_attr('maximumSelectionSize', l_max_selection_size) ||
-        add_js_attr('placeholder', l_placeholder, true) || '
-        separator: ":",
-        allowClear: true,' ||
         add_js_attr('closeOnSelect', l_rapid_selection) ||
         add_js_attr('selectOnBlur', l_select_on_blur);
 
@@ -345,8 +352,8 @@ return apex_plugin.t_page_item_render_result is
     if (l_search_logic != lco_contains_ignore_case) then
       case l_search_logic
         when lco_contains_case_sensitive then l_search_logic := 'return text.indexOf(term) >= 0;';
-        when lco_exact_ignore_case then l_search_logic := 'return text.toUpperCase() == term.toUpperCase() || term.length === 0;';
-        when lco_exact_case_sensitive then l_search_logic := 'return text == term || term.length === 0;';
+        when lco_exact_ignore_case then l_search_logic := 'return text.toUpperCase() === term.toUpperCase() || term.length === 0;';
+        when lco_exact_case_sensitive then l_search_logic := 'return text === term || term.length === 0;';
         else l_search_logic := 'return text.toUpperCase().indexOf(term.toUpperCase()) >= 0;';
       end case;
 
@@ -356,14 +363,16 @@ return apex_plugin.t_page_item_render_result is
                  },';
     end if;
 
-    l_code := l_code || 'width: "resolve"';
+    l_code := l_code || '
+        separator: ":"';
 
     if (l_select_list_type = 'TAG' and p_include_tags) then
       l_code := l_code || ',' || get_tags_option(p_item, true);
     end if;
 
     if (p_end_constructor) then
-      l_code := l_code || '});';
+      l_code := l_code || '
+      });';
     end if;
 
     return l_code;
@@ -466,8 +475,7 @@ begin
     end if;
 
     l_onload_code := l_onload_code || '
-      $("' || l_cascade_parent_items_jq || '").on(
-        "change", function(e) {';
+      $("' || l_cascade_parent_items_jq || '").on("change", function(e) {';
 
     if (p_item.ajax_optimize_refresh) then
       l_cascade_parent_items := apex_util.string_to_table(l_cascade_parent_items_jq, ',');
@@ -475,70 +483,66 @@ begin
       l_optimize_refresh_condition := '$("' || l_cascade_parent_items(1) || '").val() === ""';
 
       for i in 2 .. l_cascade_parent_items.count loop
-        l_optimize_refresh_condition := l_optimize_refresh_condition || '
-          || $("' || l_cascade_parent_items(i) || '").val() === ""';
+        l_optimize_refresh_condition := l_optimize_refresh_condition || ' || $("' || l_cascade_parent_items(i) || '").val() === ""';
       end loop;
 
       l_onload_code := l_onload_code || '
-                    var item = $("' || l_item_jq || '");
-                    if (' || l_optimize_refresh_condition || ') {';
+        var item = $("' || l_item_jq || '");
+        if (' || l_optimize_refresh_condition || ') {';
+
       if (l_select_list_type = 'TAG') then
-        l_onload_code := l_onload_code
-                       || get_select2_constructor(false, false) || ',
-                          tags: []
-                       });';
+        l_onload_code := l_onload_code ||
+          get_select2_constructor(false, false) || ',
+        tags: []
+      });';
       else
         if (p_item.lov_display_null) then
-          l_onload_code := l_onload_code || ' item.html("<option></option>");';
+          l_onload_code := l_onload_code || '
+          item.html("<option></option>");';
         else
-          l_onload_code := l_onload_code || ' item.html("");';
+          l_onload_code := l_onload_code || '
+          item.html("");';
         end if;
       end if;
 
-      l_onload_code := l_onload_code || ' item.select2("data", null);
-                    } else {';
+      l_onload_code := l_onload_code || '
+          item.select2("data", null);
+        } else {';
     end if;
       l_onload_code := l_onload_code || '
-                      apex.server.plugin(
-                        "' || apex_plugin.get_ajax_identifier || '",
-                        {
-                          pageItems: "' || l_items_for_session_state_jq || '"
-                        },
-                        {
-                          refreshObject: "' || l_item_jq || '",
-                          loadingIndicator: "' || l_item_jq || '",
-                          loadingIndicatorPosition: "after",
-                          dataType: "text",
-                          success: function(pData) {
-                                     var item = $("' || l_item_jq || '");';
+          apex.server.plugin(
+            "' || apex_plugin.get_ajax_identifier || '",
+            { pageItems: "' || l_items_for_session_state_jq || '" },
+            { refreshObject: "' || l_item_jq || '",
+              loadingIndicator: "' || l_item_jq || '",
+              loadingIndicatorPosition: "after",
+              dataType: "text",
+              success: function(pData) {
+                         var item = $("' || l_item_jq || '");';
 
     if (l_select_list_type = 'TAG') then
       l_onload_code := l_onload_code || '
-                                     var tagsArray;
-                                     tagsArray = pData.slice(0, -1).split(",");
-                                     if (tagsArray.length === 1 && tagsArray[0] === "") {
-                                       tagsArray = [];
-                                     }
-
-                                     ' || get_select2_constructor(false, false) || ',
-                                          tags: tagsArray
-                                     });';
+                         var tagsArray;
+                         tagsArray = pData.slice(0, -1).split(",");
+                         if (tagsArray.length === 1 && tagsArray[0] === "") {
+                           tagsArray = [];
+                         }
+      ' || get_select2_constructor(false, false) || ',
+        tags: tagsArray
+      });';
     else
-      l_onload_code := l_onload_code || ' item.html(pData);';
-    end if;
-
-    l_onload_code := l_onload_code || ' item.select2("data", null);
-                                   }
-                        }
-                      );';
-    if (p_item.ajax_optimize_refresh) then
       l_onload_code := l_onload_code || '
-                    }';
+      item.html(pData);';
     end if;
 
     l_onload_code := l_onload_code || '
-                  }
-      );';
+      item.select2("data", null);}});';
+
+    if (p_item.ajax_optimize_refresh) then
+      l_onload_code := l_onload_code || '}';
+    end if;
+
+    l_onload_code := l_onload_code || '});';
   end if;
 
   apex_javascript.add_onload_code(l_onload_code);
