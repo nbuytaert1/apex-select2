@@ -1002,7 +1002,7 @@ wwv_flow_api.create_plugin_attribute (
  ,p_plugin_id => 48942052171629742426 + wwv_flow_api.g_id_offset
  ,p_attribute_scope => 'COMPONENT'
  ,p_attribute_sequence => 10
- ,p_display_sequence => 100
+ ,p_display_sequence => 15
  ,p_prompt => 'Width'
  ,p_attribute_type => 'TEXT'
  ,p_is_required => false
