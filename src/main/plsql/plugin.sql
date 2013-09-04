@@ -9,7 +9,6 @@ gco_lov_return_col  constant number := 2;
 gco_lov_group_col   constant number := 3;
 
 
-
 -- UTIL
 function add_js_attr(
            p_param_name     in gt_string,
@@ -50,7 +49,6 @@ begin
            p_component_name => p_item.name
          );
 end get_lov;
-
 
 
 -- PRINT LIST OF VALUES
@@ -223,7 +221,6 @@ begin
 end get_tags_option;
 
 
-
 -- PLUGIN INTERFACE FUNCTIONS
 function render(
            p_item                in apex_plugin.t_page_item,
@@ -249,6 +246,7 @@ return apex_plugin.t_page_item_render_result is
   l_search_logic            gt_string := p_item.attribute_08;
   l_null_optgroup_label_cmp gt_string := p_item.attribute_09;
   l_width                   gt_string := p_item.attribute_10;
+  l_drag_and_drop_sorting   gt_string := p_item.attribute_11;
 
   l_value          gt_string;
   l_display_values apex_application_global.vc_arr2;
@@ -267,8 +265,8 @@ return apex_plugin.t_page_item_render_result is
 
   -- local subprograms
   function get_select2_constructor(
-            p_include_tags    boolean,
-            p_end_constructor boolean
+             p_include_tags    boolean,
+             p_end_constructor boolean
            )
   return gt_string is
     lco_contains_ignore_case    constant gt_string := 'CIC';
@@ -312,6 +310,11 @@ return apex_plugin.t_page_item_render_result is
         add_js_attr('maximumSelectionSize', l_max_selection_size) ||
         add_js_attr('closeOnSelect', l_rapid_selection) ||
         add_js_attr('selectOnBlur', l_select_on_blur);
+
+    if (not p_item.escape_output) then
+      l_code := l_code || '
+        escapeMarkup: function(m) { return m; },';
+    end if;
 
     if (l_no_matches_msg is not null) then
       l_code := l_code || '
@@ -377,6 +380,21 @@ return apex_plugin.t_page_item_render_result is
 
     return l_code;
   end get_select2_constructor;
+
+
+  function get_sortable_constructor
+  return gt_string is
+    l_code gt_string;
+  begin
+    l_code := '
+      $("' || l_item_jq || '").select2("container").find("ul.select2-choices").sortable({
+        containment: "parent",
+        start: function() { $("' || l_item_jq || '").select2("onSortStart"); },
+        update: function() { $("' || l_item_jq || '").select2("onSortEnd"); }
+      });';
+
+    return l_code;
+  end get_sortable_constructor;
 begin
   if (apex_application.g_debug) then
     apex_plugin_util.debug_page_item(p_plugin, p_item, p_value, p_is_readonly, p_is_printer_friendly);
@@ -429,13 +447,11 @@ begin
 
   apex_javascript.add_library(
     p_name      => 'select2.min',
-    p_directory => p_plugin.file_prefix,
-    p_version   => null
+    p_directory => p_plugin.file_prefix
   );
   apex_css.add_file(
     p_name      => 'select2',
-    p_directory => p_plugin.file_prefix,
-    p_version   => null
+    p_directory => p_plugin.file_prefix
   );
 
   if (l_select_list_type = 'MULTI') then
@@ -449,15 +465,14 @@ begin
       <input type="hidden"
              id="' || p_item.name || '"
              name="' || apex_plugin.get_input_name_for_page_item(true) || '"
-             value="' || l_value || '"
-             class="' || p_item.element_css_classes || '" ' ||
+             value="' || l_value || '"' ||
              p_item.element_attributes || '>');
   else
     sys.htp.p('
       <select ' || l_multiselect || '
               id="' || p_item.name || '"
               name="' || apex_plugin.get_input_name_for_page_item(true) || '"
-              class="selectlist ' || p_item.element_css_classes || '" ' ||
+              class="selectlist"' ||
               p_item.element_attributes || '>');
 
     sys.htp.p(get_options_html(p_item, p_plugin, p_value));
@@ -465,7 +480,19 @@ begin
     sys.htp.p('</select>');
   end if;
 
-  l_onload_code := get_select2_constructor(true, true);
+  l_onload_code := get_select2_constructor(
+                     p_include_tags    => true,
+                     p_end_constructor => true
+                   );
+
+  if (l_drag_and_drop_sorting is not null) then
+    apex_javascript.add_library(
+      p_name      => 'jquery.ui.sortable.min',
+      p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.8.22/ui/minified/'
+    );
+
+    l_onload_code := l_onload_code || get_sortable_constructor();
+  end if;
 
   if (p_item.lov_cascade_parent_items is not null) then
     l_items_for_session_state_jq := l_cascade_parent_items_jq;
@@ -492,7 +519,10 @@ begin
 
       if (l_select_list_type = 'TAG') then
         l_onload_code := l_onload_code ||
-          get_select2_constructor(false, false) || ',
+          get_select2_constructor(
+            p_include_tags    => false,
+            p_end_constructor => false
+          ) || ',
         tags: []
       });';
       else
@@ -527,7 +557,10 @@ begin
                          if (tagsArray.length === 1 && tagsArray[0] === "") {
                            tagsArray = [];
                          }
-      ' || get_select2_constructor(false, false) || ',
+      ' || get_select2_constructor(
+             p_include_tags    => false,
+             p_end_constructor => false
+           ) || ',
         tags: tagsArray
       });';
     else
