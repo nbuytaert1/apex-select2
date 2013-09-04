@@ -447,11 +447,13 @@ begin
 
   apex_javascript.add_library(
     p_name      => 'select2.min',
-    p_directory => p_plugin.file_prefix
+    p_directory => p_plugin.file_prefix,
+    p_version   => null
   );
   apex_css.add_file(
     p_name      => 'select2',
-    p_directory => p_plugin.file_prefix
+    p_directory => p_plugin.file_prefix,
+    p_version   => null
   );
 
   if (l_select_list_type = 'MULTI') then
@@ -488,7 +490,8 @@ begin
   if (l_drag_and_drop_sorting is not null) then
     apex_javascript.add_library(
       p_name      => 'jquery.ui.sortable.min',
-      p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.8.22/ui/minified/'
+      p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.8.22/ui/minified/',
+      p_version   => null
     );
 
     l_onload_code := l_onload_code || get_sortable_constructor();

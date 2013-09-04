@@ -560,15 +560,17 @@ wwv_flow_api.create_plugin (
 ''||unistr('\000a')||
 '  apex_javascript.add_library('||unistr('\000a')||
 '    p_name      => ''select2.min'','||unistr('\000a')||
-'    p_directory => p_plugin.file_prefix'||unistr('\000a')||
+'    p_directory => p_plugin.file_prefix,'||unistr('\000a')||
+'    p_version   => null'||unistr('\000a')||
 '  );'||unistr('\000a')||
 '  apex_css.add_file('||unistr('\000a')||
 '    p_name      => ''select2'','||unistr('\000a')||
-'    p_directory => p_plugin.file_prefix'||unistr('\000a')||
+'    p_directory => p_plugin.file_prefix,'||unistr('\000a')||
+'    p_version  '||
+' => null'||unistr('\000a')||
 '  );'||unistr('\000a')||
 ''||unistr('\000a')||
-'  if (l_select_list_type = ''MULTI'')'||
-' then'||unistr('\000a')||
+'  if (l_select_list_type = ''MULTI'') then'||unistr('\000a')||
 '    l_multiselect := ''multiple'';'||unistr('\000a')||
 '  else'||unistr('\000a')||
 '    l_multiselect := '''';'||unistr('\000a')||
@@ -580,11 +582,11 @@ wwv_flow_api.create_plugin (
 '             id="'' || p_item.name || ''"'||unistr('\000a')||
 '             name="'' || apex_plugin.get_input_name_for_page_item(true) || ''"'||unistr('\000a')||
 '             value="'' || l_value || ''"'' ||'||unistr('\000a')||
-'             p_item.element_attributes || ''>'');'||unistr('\000a')||
+'             p_item.elemen'||
+'t_attributes || ''>'');'||unistr('\000a')||
 '  else'||unistr('\000a')||
 '    sys.htp.p('''||unistr('\000a')||
-'     '||
-' <select '' || l_multiselect || '''||unistr('\000a')||
+'      <select '' || l_multiselect || '''||unistr('\000a')||
 '              id="'' || p_item.name || ''"'||unistr('\000a')||
 '              name="'' || apex_plugin.get_input_name_for_page_item(true) || ''"'||unistr('\000a')||
 '              class="selectlist"'' ||'||unistr('\000a')||
@@ -595,32 +597,33 @@ wwv_flow_api.create_plugin (
 '    sys.htp.p(''</select>'');'||unistr('\000a')||
 '  end if;'||unistr('\000a')||
 ''||unistr('\000a')||
-'  l_onload_code := get_select2_constructor('||unistr('\000a')||
-'                 '||
-'    p_include_tags    => true,'||unistr('\000a')||
+'  l_onload_'||
+'code := get_select2_constructor('||unistr('\000a')||
+'                     p_include_tags    => true,'||unistr('\000a')||
 '                     p_end_constructor => true'||unistr('\000a')||
 '                   );'||unistr('\000a')||
 ''||unistr('\000a')||
 '  if (l_drag_and_drop_sorting is not null) then'||unistr('\000a')||
 '    apex_javascript.add_library('||unistr('\000a')||
 '      p_name      => ''jquery.ui.sortable.min'','||unistr('\000a')||
-'      p_directory => ''#IMAGE_PREFIX#libraries/jquery-ui/1.8.22/ui/minified/'''||unistr('\000a')||
+'      p_directory => ''#IMAGE_PREFIX#libraries/jquery-ui/1.8.22/ui/minified/'','||unistr('\000a')||
+'      p_version   => null'||unistr('\000a')||
 '    );'||unistr('\000a')||
 ''||unistr('\000a')||
-'    l_onload_code := l_onload_code || get_sortable_constructor();'||unistr('\000a')||
+'    l_onl'||
+'oad_code := l_onload_code || get_sortable_constructor();'||unistr('\000a')||
 '  end if;'||unistr('\000a')||
 ''||unistr('\000a')||
-'  if (p_i'||
-'tem.lov_cascade_parent_items is not null) then'||unistr('\000a')||
+'  if (p_item.lov_cascade_parent_items is not null) then'||unistr('\000a')||
 '    l_items_for_session_state_jq := l_cascade_parent_items_jq;'||unistr('\000a')||
 ''||unistr('\000a')||
 '    if (l_cascade_items_to_submit_jq is not null) then'||unistr('\000a')||
 '      l_items_for_session_state_jq := l_items_for_session_state_jq || '','' || l_cascade_items_to_submit_jq;'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
-'    l_onload_code := l_onload_code || '''||unistr('\000a')||
-'      $("'' || l_cascade_parent_items_jq || ''").on("change", function(e) {'''||
-';'||unistr('\000a')||
+'    l_onload_code := l_onload_code ||'||
+' '''||unistr('\000a')||
+'      $("'' || l_cascade_parent_items_jq || ''").on("change", function(e) {'';'||unistr('\000a')||
 ''||unistr('\000a')||
 '    if (p_item.ajax_optimize_refresh) then'||unistr('\000a')||
 '      l_cascade_parent_items := apex_util.string_to_table(l_cascade_parent_items_jq, '','');'||unistr('\000a')||
@@ -628,8 +631,8 @@ wwv_flow_api.create_plugin (
 '      l_optimize_refresh_condition := ''$("'' || l_cascade_parent_items(1) || ''").val() === ""'';'||unistr('\000a')||
 ''||unistr('\000a')||
 '      for i in 2 .. l_cascade_parent_items.count loop'||unistr('\000a')||
-'        l_optimize_refresh_condition := l_optimize_refresh_condition || '' || $("'' || l_cascade_parent_items(i) |'||
-'| ''").val() === ""'';'||unistr('\000a')||
+'        l_optimize_refresh_conditio'||
+'n := l_optimize_refresh_condition || '' || $("'' || l_cascade_parent_items(i) || ''").val() === ""'';'||unistr('\000a')||
 '      end loop;'||unistr('\000a')||
 ''||unistr('\000a')||
 '      l_onload_code := l_onload_code || '''||unistr('\000a')||
@@ -639,11 +642,11 @@ wwv_flow_api.create_plugin (
 '      if (l_select_list_type = ''TAG'') then'||unistr('\000a')||
 '        l_onload_code := l_onload_code ||'||unistr('\000a')||
 '          get_select2_constructor('||unistr('\000a')||
-'            p_include_tags    => false,'||unistr('\000a')||
+'            p_include'||
+'_tags    => false,'||unistr('\000a')||
 '            p_end_constructor => false'||unistr('\000a')||
 '          ) || '','||unistr('\000a')||
-' '||
-'       tags: []'||unistr('\000a')||
+'        tags: []'||unistr('\000a')||
 '      });'';'||unistr('\000a')||
 '      else'||unistr('\000a')||
 '        if (p_item.lov_display_null) then'||unistr('\000a')||
@@ -655,30 +658,30 @@ wwv_flow_api.create_plugin (
 '        end if;'||unistr('\000a')||
 '      end if;'||unistr('\000a')||
 ''||unistr('\000a')||
-'      l_onload_code := l_onload_code || '''||unistr('\000a')||
+'      l_onload_code := l_onload_cod'||
+'e || '''||unistr('\000a')||
 '          item.select2("data", null);'||unistr('\000a')||
 '        } else {'';'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
-' '||
-'     l_onload_code := l_onload_code || '''||unistr('\000a')||
+'      l_onload_code := l_onload_code || '''||unistr('\000a')||
 '          apex.server.plugin('||unistr('\000a')||
 '            "'' || apex_plugin.get_ajax_identifier || ''",'||unistr('\000a')||
 '            { pageItems: "'' || l_items_for_session_state_jq || ''" },'||unistr('\000a')||
 '            { refreshObject: "'' || l_item_jq || ''",'||unistr('\000a')||
 '              loadingIndicator: "'' || l_item_jq || ''",'||unistr('\000a')||
-'              loadingIndicatorPosition: "after",'||unistr('\000a')||
+'              loadi'||
+'ngIndicatorPosition: "after",'||unistr('\000a')||
 '              dataType: "text",'||unistr('\000a')||
-'              s'||
-'uccess: function(pData) {'||unistr('\000a')||
+'              success: function(pData) {'||unistr('\000a')||
 '                         var item = $("'' || l_item_jq || ''");'';'||unistr('\000a')||
 ''||unistr('\000a')||
 '    if (l_select_list_type = ''TAG'') then'||unistr('\000a')||
 '      l_onload_code := l_onload_code || '''||unistr('\000a')||
 '                         var tagsArray;'||unistr('\000a')||
 '                         tagsArray = pData.slice(0, -1).split(",");'||unistr('\000a')||
-'                         if (tagsArray.length === 1 && tagsArray[0] === "") {'||unistr('\000a')||
-'                           tagsArray = ['||
-'];'||unistr('\000a')||
+'                         if (tagsArray.le'||
+'ngth === 1 && tagsArray[0] === "") {'||unistr('\000a')||
+'                           tagsArray = [];'||unistr('\000a')||
 '                         }'||unistr('\000a')||
 '      '' || get_select2_constructor('||unistr('\000a')||
 '             p_include_tags    => false,'||unistr('\000a')||
@@ -691,11 +694,11 @@ wwv_flow_api.create_plugin (
 '      item.html(pData);'';'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
-'    l_onload_code := l_onload_code || '''||unistr('\000a')||
+'    l_onload_code := l_onload_c'||
+'ode || '''||unistr('\000a')||
 '      item.select2("data", null);}});'';'||unistr('\000a')||
 ''||unistr('\000a')||
-'    if (p_item.ajax_optimiz'||
-'e_refresh) then'||unistr('\000a')||
+'    if (p_item.ajax_optimize_refresh) then'||unistr('\000a')||
 '      l_onload_code := l_onload_code || ''}'';'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
@@ -710,10 +713,10 @@ wwv_flow_api.create_plugin (
 ''||unistr('\000a')||
 'function ajax('||unistr('\000a')||
 '           p_item   in apex_plugin.t_page_item,'||unistr('\000a')||
+''||
 '           p_plugin in apex_plugin.t_plugin'||unistr('\000a')||
 '         )'||unistr('\000a')||
-'return apex_plugin.t_p'||
-'age_item_ajax_result is'||unistr('\000a')||
+'return apex_plugin.t_page_item_ajax_result is'||unistr('\000a')||
 '  l_select_list_type gt_string := p_item.attribute_01;'||unistr('\000a')||
 ''||unistr('\000a')||
 '  l_result apex_plugin.t_page_item_ajax_result;'||unistr('\000a')||
@@ -744,7 +747,7 @@ wwv_flow_api.create_plugin (
 ' ORDER BY grp, d'||unistr('\000a')||
 '</pre>'
  ,p_substitute_attributes => true
- ,p_version_identifier => '2.0'
+ ,p_version_identifier => '2.0.1'
  ,p_about_url => 'http://apex.oracle.com/pls/apex/f?p=64237:20'
   );
 wwv_flow_api.create_plugin_attribute (
