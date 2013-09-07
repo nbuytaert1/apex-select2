@@ -259,6 +259,7 @@ return apex_plugin.t_page_item_render_result is
   l_cascade_parent_items       apex_application_global.vc_arr2;
   l_optimize_refresh_condition gt_string;
 
+  l_apex_version  gt_string;
   l_onload_code   gt_string;
   l_render_result apex_plugin.t_page_item_render_result;
 
@@ -488,11 +489,23 @@ begin
                    );
 
   if (l_drag_and_drop_sorting is not null) then
-    apex_javascript.add_library(
-      p_name      => 'jquery.ui.sortable.min',
-      p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.8.22/ui/minified/',
-      p_version   => null
-    );
+    select substr(version_no, 1, 3)
+    into l_apex_version
+    from apex_release;
+
+    if (l_apex_version = 4.1) then
+      apex_javascript.add_library(
+        p_name      => 'jquery-ui.custom.min',
+        p_directory => p_plugin.file_prefix,
+        p_version   => null
+      );
+    else
+      apex_javascript.add_library(
+        p_name      => 'jquery.ui.sortable.min',
+        p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.8.22/ui/minified/',
+        p_version   => null
+      );
+    end if;
 
     l_onload_code := l_onload_code || get_sortable_constructor();
   end if;
