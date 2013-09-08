@@ -493,7 +493,7 @@ begin
     into l_apex_version
     from apex_release;
 
-    if (l_apex_version = 4.1) then
+    if (l_apex_version = '4.1') then
       apex_javascript.add_library(
         p_name      => 'jquery-ui.custom.min',
         p_directory => p_plugin.file_prefix,
