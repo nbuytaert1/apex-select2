@@ -6,10 +6,10 @@ Changelog
 * based on Select2 v3.4.1
 
 ###v1.1 - 14/08/2013
-* fixed several bugs and temporarily dropped support for cascading LOVs, I'll try to re-include cascading LOV support in the next version
+* fixed several bugs and temporarily dropped support for cascading LOVs, I'll try to re-include it in the next version
 
 ###v1.2 - 16/08/2013
-introduced cascading LOV support again ([issue #3](https://github.com/nbuytaert1/apex-select2/issues/3))
+* introduced cascading LOV support again ([issue #3](https://github.com/nbuytaert1/apex-select2/issues/3))
 
 ###v1.3 - 19/08/2013
 * upgraded the Select2 libraries to version 3.4.2 ([issue #5](https://github.com/nbuytaert1/apex-select2/issues/5))
