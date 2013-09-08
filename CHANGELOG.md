@@ -1,0 +1,33 @@
+Changelog
+=========
+
+###v1.0 - 12/08/2013
+* initial release
+* based on Select2 v3.4.1
+
+###v1.1 - 14/08/2013
+* fixed several bugs and temporarily dropped support for cascading LOVs, I'll try to re-include cascading LOV support in the next version
+
+###v1.2 - 16/08/2013
+introduced cascading LOV support again ([issue #3](https://github.com/nbuytaert1/apex-select2/issues/3))
+
+###v1.3 - 19/08/2013
+* upgraded the Select2 libraries to version 3.4.2 ([issue #5](https://github.com/nbuytaert1/apex-select2/issues/5))
+* fixed [issue #6](https://github.com/nbuytaert1/apex-select2/issues/6)
+
+###v1.4 - 20/08/2013
+* introduced a custom width attribute and changed the default width calculation behaviour ([issue #8](https://github.com/nbuytaert1/apex-select2/issues/8))
+* fixed [issue #9](https://github.com/nbuytaert1/apex-select2/issues/9)
+
+###v2.0 - 04/09/2013
+* lowered the minimum APEX version to 4.1 ([issue #11](https://github.com/nbuytaert1/apex-select2/issues/11) - thanks to Jorge Rimblas for the help
+* included drag and drop sorting in tagging mode ([issue #7](https://github.com/nbuytaert1/apex-select2/issues/7))
+
+###v2.0.1 - 04/09/2013
+* fixed [issue #12](https://github.com/nbuytaert1/apex-select2/issues/12)
+
+###v2.0.2 - 07/09/2013
+* fixed [issue #13](https://github.com/nbuytaert1/apex-select2/issues/13)
+
+###v2.0.3 - 08/09/2013
+* fixed [issue #14](https://github.com/nbuytaert1/apex-select2/issues/14)
