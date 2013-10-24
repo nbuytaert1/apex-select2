@@ -185,37 +185,49 @@ function get_tags_option(
 return gt_string is
   l_lov         apex_plugin_util.t_column_value_list;
   l_tags_option gt_string;
+  l_id varchar2(4000);
+  l_text varchar2(4000);
+  l_use_lov_return_val_flag apex_application_page_items.attribute_01%type := p_item.attribute_12;
 begin
   l_lov := get_lov(p_item);
-
-  if (p_include_key) then
-    l_tags_option := '
-        tags: [';
-
-    for i in 1 .. l_lov(gco_lov_display_col).count loop
-      if (p_item.escape_output) then
-        l_tags_option := l_tags_option || '"' || sys.htf.escape_sc(l_lov(gco_lov_display_col)(i)) || '",';
-      else
-        l_tags_option := l_tags_option || '"' || l_lov(gco_lov_display_col)(i) || '",';
-      end if;
-    end loop;
-  else
-    for i in 1 .. l_lov(gco_lov_display_col).count loop
-      if (p_item.escape_output) then
-        l_tags_option := l_tags_option || sys.htf.escape_sc(l_lov(gco_lov_display_col)(i)) || ',';
-      else
-        l_tags_option := l_tags_option || l_lov(gco_lov_display_col)(i) || ',';
-      end if;
-    end loop;
-  end if;
+  
+  
+  for i in 1 .. l_lov(gco_lov_display_col).count loop
+    -- Fix Issue #18 (support for object {id,text} and strings)
+    l_id := l_lov(gco_lov_return_col)(i);
+    l_text := l_lov(gco_lov_display_col)(i);
+    
+    if (p_item.escape_output) then
+      l_id := sys.htf.escape_sc(l_id);
+      l_text := sys.htf.escape_sc(l_text);
+    end if;
+    
+    if p_include_key and l_use_lov_return_val_flag = 'N' then
+      -- Need to wrap with quote since how it's parsed in JS
+      l_tags_option := l_tags_option || '"' || l_text || '",';
+    elsif not p_include_key and l_use_lov_return_val_flag = 'N' then
+      -- Don't include quotes since will be split() in JS
+      l_tags_option := l_tags_option || l_text || ',';
+    else
+      -- Since l_restrict_lov_flag must be Y pass in JSON object
+      l_tags_option := l_tags_option || '{' || 
+        apex_javascript.add_attribute ('id', l_id) ||
+        apex_javascript.add_attribute ('text', l_text, false, false) ||
+        '},'
+      ;
+    end if;
+  
+  end loop;
 
   if (l_lov(gco_lov_display_col).count > 0) then
     l_tags_option := substr(l_tags_option, 0, length(l_tags_option) - 1);
   end if;
-
+  
   if (p_include_key) then
-    l_tags_option := l_tags_option || ']';
+    l_tags_option := '
+        tags: [' || l_tags_option || ']' ;
   end if;
+
 
   return l_tags_option;
 end get_tags_option;
