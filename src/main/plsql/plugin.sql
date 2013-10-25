@@ -193,19 +193,11 @@ begin
         tags: [';
 
     for i in 1 .. l_lov(gco_lov_display_col).count loop
-      if (p_item.escape_output) then
-        l_tags_option := l_tags_option || '"' || sys.htf.escape_sc(l_lov(gco_lov_display_col)(i)) || '",';
-      else
-        l_tags_option := l_tags_option || '"' || l_lov(gco_lov_display_col)(i) || '",';
-      end if;
+      l_tags_option := l_tags_option || '"' || l_lov(gco_lov_display_col)(i) || '",';
     end loop;
   else
     for i in 1 .. l_lov(gco_lov_display_col).count loop
-      if (p_item.escape_output) then
-        l_tags_option := l_tags_option || sys.htf.escape_sc(l_lov(gco_lov_display_col)(i)) || ',';
-      else
-        l_tags_option := l_tags_option || l_lov(gco_lov_display_col)(i) || ',';
-      end if;
+      l_tags_option := l_tags_option || l_lov(gco_lov_display_col)(i) || ',';
     end loop;
   end if;
 
@@ -248,7 +240,6 @@ return apex_plugin.t_page_item_render_result is
   l_width                   gt_string := p_item.attribute_10;
   l_drag_and_drop_sorting   gt_string := p_item.attribute_11;
 
-  l_value          gt_string;
   l_display_values apex_application_global.vc_arr2;
   l_multiselect    gt_string;
 
@@ -311,11 +302,6 @@ return apex_plugin.t_page_item_render_result is
         add_js_attr('maximumSelectionSize', l_max_selection_size) ||
         add_js_attr('closeOnSelect', l_rapid_selection) ||
         add_js_attr('selectOnBlur', l_select_on_blur);
-
-    if (not p_item.escape_output) then
-      l_code := l_code || '
-        escapeMarkup: function(m) { return m; },';
-    end if;
 
     if (l_no_matches_msg is not null) then
       l_code := l_code || '
@@ -401,12 +387,6 @@ begin
     apex_plugin_util.debug_page_item(p_plugin, p_item, p_value, p_is_readonly, p_is_printer_friendly);
   end if;
 
-  if (p_item.escape_output) then
-    l_value := sys.htf.escape_sc(p_value);
-  else
-    l_value := p_value;
-  end if;
-
   if (p_is_readonly or p_is_printer_friendly) then
     apex_plugin_util.print_hidden_if_readonly(p_item.name, p_value, p_is_readonly, p_is_printer_friendly);
 
@@ -433,11 +413,7 @@ begin
             class="display_only">');
 
       for i in 1 .. l_display_values.count loop
-        if (p_item.escape_output) then
-          sys.htp.p('<li>' || sys.htf.escape_sc(l_display_values(i)) || '</li>');
-        else
-          sys.htp.p('<li>' || l_display_values(i) || '</li>');
-        end if;
+        sys.htp.p('<li>' || l_display_values(i) || '</li>');
       end loop;
 
       sys.htp.p('</ul>');
@@ -456,6 +432,11 @@ begin
     p_directory => p_plugin.file_prefix,
     p_version   => null
   );
+  apex_css.add_file(
+    p_name      => 'select2-bootstrap',
+    p_directory => p_plugin.file_prefix,
+    p_version   => null
+  );
 
   if (l_select_list_type = 'MULTI') then
     l_multiselect := 'multiple';
@@ -468,7 +449,7 @@ begin
       <input type="hidden"
              id="' || p_item.name || '"
              name="' || apex_plugin.get_input_name_for_page_item(true) || '"
-             value="' || l_value || '"' ||
+             value="' || p_value || '"' ||
              p_item.element_attributes || '>');
   else
     sys.htp.p('
@@ -593,6 +574,37 @@ begin
 
     l_onload_code := l_onload_code || '});';
   end if;
+
+  l_onload_code := l_onload_code || '
+    var pageItem = $("' || l_item_jq || '");
+
+    pageItem.on("change", function(e) {
+      apex.jQuery(this).trigger("slctchange", {val:e.val, added:e.added, removed:e.removed});
+    });
+    pageItem.on("select2-opening", function(e) {
+      apex.jQuery(this).trigger("slctopening");
+    });
+    pageItem.on("select2-open", function(e) {
+      apex.jQuery(this).trigger("slctopen");
+    });
+    pageItem.on("select2-highlight", function(e) {
+      apex.jQuery(this).trigger("slcthighlight", {val:e.val, choice:e.choice});
+    });
+    pageItem.on("select2-selecting", function(e) {
+      apex.jQuery(this).trigger("slctselecting", {val:e.val, choice:e.choice});
+    });
+    pageItem.on("select2-clearing", function(e) {
+      apex.jQuery(this).trigger("slctclearing");
+    });
+    pageItem.on("select2-removed", function(e) {
+      apex.jQuery(this).trigger("slctremoved", {val:e.val, choice:e.choice});
+    });
+    pageItem.on("select2-focus", function(e) {
+      apex.jQuery(this).trigger("slctfocus");
+    });
+    pageItem.on("select2-blur", function(e) {
+      apex.jQuery(this).trigger("slctblur");
+    });';
 
   apex_javascript.add_onload_code(l_onload_code);
   l_render_result.is_navigable := true;

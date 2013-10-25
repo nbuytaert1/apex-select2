@@ -31,3 +31,9 @@ Changelog
 
 ###v2.0.3 - 08/09/2013
 * fixed [issue #14](https://github.com/nbuytaert1/apex-select2/issues/14)
+
+###v2.1 - 25/10/2013
+* fixed [issue #15](https://github.com/nbuytaert1/apex-select2/issues/15)
+* upgraded the Select2 libraries to version 3.4.3 ([issue #17](https://github.com/nbuytaert1/apex-select2/issues/17))
+* upgraded the Select2 libraries to version 3.4.4 ([issue #20](https://github.com/nbuytaert1/apex-select2/issues/20))
+* introduced custom Select2 plugin events to be used in dynamic actions ([issue #21](https://github.com/nbuytaert1/apex-select2/issues/21))
