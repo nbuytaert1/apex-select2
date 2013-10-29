@@ -37,3 +37,7 @@ Changelog
 * upgraded the Select2 libraries to version 3.4.3 ([issue #17](https://github.com/nbuytaert1/apex-select2/issues/17))
 * upgraded the Select2 libraries to version 3.4.4 ([issue #20](https://github.com/nbuytaert1/apex-select2/issues/20))
 * introduced custom Select2 plugin events to be used in dynamic actions ([issue #21](https://github.com/nbuytaert1/apex-select2/issues/21))
+
+###v2.2 - 29/10/2013
+* reverted back to version 3.4.3 due to some bugs in 3.4.4
+* new setting in tagging mode: ﻿Return Value Based on - determines whether ﻿the return value of the item is based on the display or return column (thanks to Martin Giffy D'Souza) [issue #18](https://github.com/nbuytaert1/apex-select2/issues/18)

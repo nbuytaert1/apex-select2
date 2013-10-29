@@ -183,22 +183,39 @@ function get_tags_option(
            p_include_key in boolean
          )
 return gt_string is
-  l_lov         apex_plugin_util.t_column_value_list;
-  l_tags_option gt_string;
+  l_lov                   apex_plugin_util.t_column_value_list;
+  l_select_list_type      gt_string := p_item.attribute_01;
+  l_return_value_based_on gt_string := p_item.attribute_12;
+  l_tags_option           gt_string;
 begin
   l_lov := get_lov(p_item);
 
-  if (p_include_key) then
-    l_tags_option := '
-        tags: [';
-
-    for i in 1 .. l_lov(gco_lov_display_col).count loop
-      l_tags_option := l_tags_option || '"' || l_lov(gco_lov_display_col)(i) || '",';
-    end loop;
+  if (l_select_list_type != 'TAG' or
+     (l_select_list_type = 'TAG' and l_return_value_based_on = 'DISPLAY')) then
+    if (p_include_key) then
+      for i in 1 .. l_lov(gco_lov_display_col).count loop
+        l_tags_option := l_tags_option || '"' || l_lov(gco_lov_display_col)(i) || '",';
+      end loop;
+    elsif (not p_include_key) then
+      for i in 1 .. l_lov(gco_lov_display_col).count loop
+        l_tags_option := l_tags_option || l_lov(gco_lov_display_col)(i) || ',';
+      end loop;
+    end if;
   else
     for i in 1 .. l_lov(gco_lov_display_col).count loop
-      l_tags_option := l_tags_option || l_lov(gco_lov_display_col)(i) || ',';
+      l_tags_option := l_tags_option || '{' ||
+                                           add_js_attr('"id"', l_lov(gco_lov_return_col)(i)) ||
+                                           add_js_attr('"text"', l_lov(gco_lov_display_col)(i), true, false) ||
+                                        '},';
     end loop;
+
+    if (not p_include_key) then
+      if (l_lov(gco_lov_display_col).count > 0) then
+        l_tags_option := substr(l_tags_option, 0, length(l_tags_option) - 1);
+      end if;
+
+      return '[' || l_tags_option || ']';
+    end if;
   end if;
 
   if (l_lov(gco_lov_display_col).count > 0) then
@@ -206,7 +223,8 @@ begin
   end if;
 
   if (p_include_key) then
-    l_tags_option := l_tags_option || ']';
+    l_tags_option := '
+        tags: [' || l_tags_option || ']';
   end if;
 
   return l_tags_option;
@@ -239,6 +257,7 @@ return apex_plugin.t_page_item_render_result is
   l_null_optgroup_label_cmp gt_string := p_item.attribute_09;
   l_width                   gt_string := p_item.attribute_10;
   l_drag_and_drop_sorting   gt_string := p_item.attribute_11;
+  l_return_value_based_on   gt_string := p_item.attribute_12;
 
   l_display_values apex_application_global.vc_arr2;
   l_multiselect    gt_string;
@@ -257,8 +276,8 @@ return apex_plugin.t_page_item_render_result is
 
   -- local subprograms
   function get_select2_constructor(
-             p_include_tags    boolean,
-             p_end_constructor boolean
+             p_include_tags    in boolean,
+             p_end_constructor in boolean
            )
   return gt_string is
     lco_contains_ignore_case    constant gt_string := 'CIC';
@@ -427,13 +446,13 @@ begin
     p_directory => p_plugin.file_prefix,
     p_version   => null
   );
-  apex_css.add_file(
-    p_name      => 'select2',
+  apex_javascript.add_library(
+    p_name      => 'select2-apex',
     p_directory => p_plugin.file_prefix,
     p_version   => null
   );
   apex_css.add_file(
-    p_name      => 'select2-bootstrap',
+    p_name      => 'select2',
     p_directory => p_plugin.file_prefix,
     p_version   => null
   );
@@ -542,18 +561,31 @@ begin
             { pageItems: "' || l_items_for_session_state_jq || '" },
             { refreshObject: "' || l_item_jq || '",
               loadingIndicator: "' || l_item_jq || '",
-              loadingIndicatorPosition: "after",
-              dataType: "text",
+              loadingIndicatorPosition: "after",';
+    if (l_select_list_type = 'TAG' and l_return_value_based_on = 'RETURN') then
+      l_onload_code := l_onload_code || '
+              dataType: "json",';
+    else
+      l_onload_code := l_onload_code || '
+              dataType: "text",';
+    end if;
+      l_onload_code := l_onload_code || '
               success: function(pData) {
                          var item = $("' || l_item_jq || '");';
-
     if (l_select_list_type = 'TAG') then
-      l_onload_code := l_onload_code || '
+      if (l_return_value_based_on = 'DISPLAY') then
+        l_onload_code := l_onload_code || '
                          var tagsArray;
                          tagsArray = pData.slice(0, -1).split(",");
                          if (tagsArray.length === 1 && tagsArray[0] === "") {
                            tagsArray = [];
-                         }
+                         }';
+      else
+        l_onload_code := l_onload_code || '
+                         var tagsArray = pData;';
+      end if;
+
+      l_onload_code := l_onload_code || '
       ' || get_select2_constructor(
              p_include_tags    => false,
              p_end_constructor => false
@@ -576,35 +608,7 @@ begin
   end if;
 
   l_onload_code := l_onload_code || '
-    var pageItem = $("' || l_item_jq || '");
-
-    pageItem.on("change", function(e) {
-      apex.jQuery(this).trigger("slctchange", {val:e.val, added:e.added, removed:e.removed});
-    });
-    pageItem.on("select2-opening", function(e) {
-      apex.jQuery(this).trigger("slctopening");
-    });
-    pageItem.on("select2-open", function(e) {
-      apex.jQuery(this).trigger("slctopen");
-    });
-    pageItem.on("select2-highlight", function(e) {
-      apex.jQuery(this).trigger("slcthighlight", {val:e.val, choice:e.choice});
-    });
-    pageItem.on("select2-selecting", function(e) {
-      apex.jQuery(this).trigger("slctselecting", {val:e.val, choice:e.choice});
-    });
-    pageItem.on("select2-clearing", function(e) {
-      apex.jQuery(this).trigger("slctclearing");
-    });
-    pageItem.on("select2-removed", function(e) {
-      apex.jQuery(this).trigger("slctremoved", {val:e.val, choice:e.choice});
-    });
-    pageItem.on("select2-focus", function(e) {
-      apex.jQuery(this).trigger("slctfocus");
-    });
-    pageItem.on("select2-blur", function(e) {
-      apex.jQuery(this).trigger("slctblur");
-    });';
+      beCtbSelect2.events.bind("' || l_item_jq || '");';
 
   apex_javascript.add_onload_code(l_onload_code);
   l_render_result.is_navigable := true;
@@ -618,7 +622,6 @@ function ajax(
          )
 return apex_plugin.t_page_item_ajax_result is
   l_select_list_type gt_string := p_item.attribute_01;
-
   l_result apex_plugin.t_page_item_ajax_result;
 begin
   if (l_select_list_type = 'TAG') then
