@@ -456,6 +456,11 @@ begin
     p_directory => p_plugin.file_prefix,
     p_version   => null
   );
+  apex_css.add_file(
+    p_name      => '﻿select2-bootstrap',
+    p_directory => p_plugin.file_prefix,
+    p_version   => null
+  );
 
   if (l_select_list_type = 'MULTI') then
     l_multiselect := 'multiple';
