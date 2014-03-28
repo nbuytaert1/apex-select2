@@ -44,3 +44,6 @@ Changelog
 
 ###v2.3 - 15/11/2013
 * upgraded the Select2 libraries to version 3.4.5
+
+###v2.3.1 - 28/3/2014
+* fixed when item value is null on dropdown list and it's incorrectly detected as a form change.
