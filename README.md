@@ -17,8 +17,12 @@ More information and downloads can be found [here](http://apex.oracle.com/pls/ap
 
 ##Current Stable Version
 
-Version 2.3
+Version 2.4
 
-##Licence
+##Contributors
+* [Martin Giffy D'Souza](https://github.com/martindsouza)
+* [Jorge Rimblas](https://github.com/rimblas)
+
+##License
 
 See LICENSE.md

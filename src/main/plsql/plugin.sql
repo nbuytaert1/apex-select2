@@ -59,6 +59,7 @@ function get_options_html(
          )
 return gt_string is
   l_null_optgroup_label_app gt_string := p_plugin.attribute_05;
+  l_select_list_type        gt_string := p_item.attribute_01;
   l_null_optgroup_label_cmp gt_string := p_item.attribute_09;
 
   lco_null_optgroup_label constant gt_string := 'Ungrouped';
@@ -131,7 +132,7 @@ begin
   l_lov := get_lov(p_item);
 
   if (p_item.lov_display_null) then
-    if p_value is null then
+    if (l_select_list_type = 'SINGLE' and p_value is null) then
       sys.htp.p('<option value="" selected="selected"></option>');
     else
       sys.htp.p('<option></option>');
@@ -461,7 +462,7 @@ begin
     p_version   => null
   );
   apex_css.add_file(
-    p_name      => '﻿select2-bootstrap',
+    p_name      => 'select2-bootstrap',
     p_directory => p_plugin.file_prefix,
     p_version   => null
   );
