@@ -51,4 +51,4 @@ Changelog
 ###v2.4 - 30/03/2014
 * tested Jorge Rimbas' pull request and applied it only to single-value select lists
 * upgraded the Select2 libraries to version 3.4.6 ([issue #26](https://github.com/nbuytaert1/apex-select2/issues/26))
-* closed ([issue #24](https://github.com/nbuytaert1/apex-select2/issues/24)) - the value returned from an LOV definition is always colon-separated (non-configurable)
+* fixed [issue #24](https://github.com/nbuytaert1/apex-select2/issues/24)

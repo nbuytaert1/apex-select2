@@ -61,6 +61,7 @@ return gt_string is
   l_null_optgroup_label_app gt_string := p_plugin.attribute_05;
   l_select_list_type        gt_string := p_item.attribute_01;
   l_null_optgroup_label_cmp gt_string := p_item.attribute_09;
+  l_source_value_separator  gt_string := p_item.attribute_13;
 
   lco_null_optgroup_label constant gt_string := 'Ungrouped';
 
@@ -118,7 +119,7 @@ return gt_string is
   return boolean is
     l_selected_values apex_application_global.vc_arr2;
   begin
-    l_selected_values := apex_util.string_to_table(p_selected_values);
+    l_selected_values := apex_util.string_to_table(p_selected_values, nvl(l_source_value_separator, ':'));
 
     for i in 1 .. l_selected_values.count loop
       if (p_value = l_selected_values(i)) then
@@ -263,6 +264,7 @@ return apex_plugin.t_page_item_render_result is
   l_width                   gt_string := p_item.attribute_10;
   l_drag_and_drop_sorting   gt_string := p_item.attribute_11;
   l_return_value_based_on   gt_string := p_item.attribute_12;
+  l_source_value_separator  gt_string := p_item.attribute_13;
 
   l_display_values apex_application_global.vc_arr2;
   l_multiselect    gt_string;
@@ -419,7 +421,7 @@ begin
                           p_min_columns       => gco_min_lov_cols,
                           p_max_columns       => gco_max_lov_cols,
                           p_component_name    => p_item.name,
-                          p_search_value_list => apex_util.string_to_table(p_value),
+                          p_search_value_list => apex_util.string_to_table(p_value, nvl(l_source_value_separator, ':')),
                           p_display_extra     => p_item.lov_display_extra
                         );
 
