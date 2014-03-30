@@ -131,7 +131,11 @@ begin
   l_lov := get_lov(p_item);
 
   if (p_item.lov_display_null) then
-    sys.htp.p('<option></option>');
+    if p_value is null then
+      sys.htp.p('<option value="" selected="selected"></option>');
+    else
+      sys.htp.p('<option></option>');
+    end if;
   end if;
 
   if (l_lov.exists(gco_lov_group_col)) then
