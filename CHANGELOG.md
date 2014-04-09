@@ -52,3 +52,6 @@ Changelog
 * tested Jorge Rimbas' pull request and applied it only to single-value select lists
 * upgraded the Select2 libraries to version 3.4.6 ([issue #26](https://github.com/nbuytaert1/apex-select2/issues/26))
 * fixed [issue #24](https://github.com/nbuytaert1/apex-select2/issues/24)
+
+###v2.4.1 - 09/04/2014
+* fixed [issue #28](https://github.com/nbuytaert1/apex-select2/issues/28)

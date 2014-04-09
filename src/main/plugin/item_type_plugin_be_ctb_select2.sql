@@ -302,9 +302,9 @@ wwv_flow_api.create_plugin (
 '  else'||unistr('\000a')||
 '    for i in 1 .. l_lov(gco_lov_display_col).count loop'||unistr('\000a')||
 '      l_tags_option := l_tags_option || ''{'' ||'||unistr('\000a')||
-'                                           add_js_attr(''"id"'', l_lov(gco_lov_return_col)(i)) ||'||unistr('\000a')||
-'                    '||
-'                       add_js_attr(''"text"'', l_lov(gco_lov_display_col)(i), true, false) ||'||unistr('\000a')||
+'                                           add_js_attr(''"id"'', l_lov(gco_lov_return_col)(i), true) ||'||unistr('\000a')||
+'              '||
+'                             add_js_attr(''"text"'', l_lov(gco_lov_display_col)(i), true, false) ||'||unistr('\000a')||
 '                                        ''},'';'||unistr('\000a')||
 '    end loop;'||unistr('\000a')||
 ''||unistr('\000a')||
@@ -315,10 +315,10 @@ wwv_flow_api.create_plugin (
 ''||unistr('\000a')||
 '      return ''['' || l_tags_option || '']'';'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
-'  end if;'||unistr('\000a')||
+'  end if;'||
 ''||unistr('\000a')||
-'  if'||
-' (l_lov(gco_lov_display_col).count > 0) then'||unistr('\000a')||
+''||unistr('\000a')||
+'  if (l_lov(gco_lov_display_col).count > 0) then'||unistr('\000a')||
 '    l_tags_option := substr(l_tags_option, 0, length(l_tags_option) - 1);'||unistr('\000a')||
 '  end if;'||unistr('\000a')||
 ''||unistr('\000a')||
@@ -334,8 +334,8 @@ wwv_flow_api.create_plugin (
 '-- PLUGIN INTERFACE FUNCTIONS'||unistr('\000a')||
 'function render('||unistr('\000a')||
 '           p_item                in apex_plugin.t_page_item,'||unistr('\000a')||
-'           p_'||
-'plugin              in apex_plugin.t_plugin,'||unistr('\000a')||
+'       '||
+'    p_plugin              in apex_plugin.t_plugin,'||unistr('\000a')||
 '           p_value               in gt_string,'||unistr('\000a')||
 '           p_is_readonly         in boolean,'||unistr('\000a')||
 '           p_is_printer_friendly in boolean'||unistr('\000a')||
@@ -343,24 +343,24 @@ wwv_flow_api.create_plugin (
 'return apex_plugin.t_page_item_render_result is'||unistr('\000a')||
 '  l_no_matches_msg          gt_string := p_plugin.attribute_01;'||unistr('\000a')||
 '  l_input_too_short_msg     gt_string := p_plugin.attribute_02;'||unistr('\000a')||
-'  l_selection_too_big_msg   gt_s'||
-'tring := p_plugin.attribute_03;'||unistr('\000a')||
+'  l_selection_too_big_msg '||
+'  gt_string := p_plugin.attribute_03;'||unistr('\000a')||
 '  l_searching_msg           gt_string := p_plugin.attribute_04;'||unistr('\000a')||
 '  l_null_optgroup_label_app gt_string := p_plugin.attribute_05;'||unistr('\000a')||
 ''||unistr('\000a')||
 '  l_select_list_type        gt_string := p_item.attribute_01;'||unistr('\000a')||
 '  l_min_results_for_search  gt_string := p_item.attribute_02;'||unistr('\000a')||
 '  l_min_input_length        gt_string := p_item.attribute_03;'||unistr('\000a')||
-'  l_max_input_length        gt_string := p_item.attri'||
-'bute_04;'||unistr('\000a')||
+'  l_max_input_length        gt_string := p_item'||
+'.attribute_04;'||unistr('\000a')||
 '  l_max_selection_size      gt_string := p_item.attribute_05;'||unistr('\000a')||
 '  l_rapid_selection         gt_string := p_item.attribute_06;'||unistr('\000a')||
 '  l_select_on_blur          gt_string := p_item.attribute_07;'||unistr('\000a')||
 '  l_search_logic            gt_string := p_item.attribute_08;'||unistr('\000a')||
 '  l_null_optgroup_label_cmp gt_string := p_item.attribute_09;'||unistr('\000a')||
 '  l_width                   gt_string := p_item.attribute_10;'||unistr('\000a')||
-'  l_drag_and_drop_s'||
-'orting   gt_string := p_item.attribute_11;'||unistr('\000a')||
+'  l_drag_and_'||
+'drop_sorting   gt_string := p_item.attribute_11;'||unistr('\000a')||
 '  l_return_value_based_on   gt_string := p_item.attribute_12;'||unistr('\000a')||
 '  l_source_value_separator  gt_string := p_item.attribute_13;'||unistr('\000a')||
 ''||unistr('\000a')||
@@ -368,17 +368,17 @@ wwv_flow_api.create_plugin (
 '  l_multiselect    gt_string;'||unistr('\000a')||
 ''||unistr('\000a')||
 '  l_item_jq                    gt_string := apex_plugin_util.page_item_names_to_jquery(p_item.name);'||unistr('\000a')||
-'  l_cascade_parent_items_jq    gt_string := apex'||
-'_plugin_util.page_item_names_to_jquery(p_item.lov_cascade_parent_items);'||unistr('\000a')||
+'  l_cascade_parent_items_jq    gt_string :'||
+'= apex_plugin_util.page_item_names_to_jquery(p_item.lov_cascade_parent_items);'||unistr('\000a')||
 '  l_cascade_items_to_submit_jq gt_string := apex_plugin_util.page_item_names_to_jquery(p_item.ajax_items_to_submit);'||unistr('\000a')||
 '  l_items_for_session_state_jq gt_string;'||unistr('\000a')||
 '  l_cascade_parent_items       apex_application_global.vc_arr2;'||unistr('\000a')||
 '  l_optimize_refresh_condition gt_string;'||unistr('\000a')||
 ''||unistr('\000a')||
 '  l_apex_version  gt_string;'||unistr('\000a')||
-'  l_onload_code   gt_string;'||unistr('\000a')||
-'  l'||
-'_render_result apex_plugin.t_page_item_render_result;'||unistr('\000a')||
+'  l_onload_code   gt_strin'||
+'g;'||unistr('\000a')||
+'  l_render_result apex_plugin.t_page_item_render_result;'||unistr('\000a')||
 ''||unistr('\000a')||
 ''||unistr('\000a')||
 '  -- local subprograms'||unistr('\000a')||
@@ -389,8 +389,8 @@ wwv_flow_api.create_plugin (
 '  return gt_string is'||unistr('\000a')||
 '    lco_contains_ignore_case    constant gt_string := ''CIC'';'||unistr('\000a')||
 '    lco_contains_case_sensitive constant gt_string := ''CCS'';'||unistr('\000a')||
-'    lco_exact_ignore_case       constant gt'||
-'_string := ''EIC'';'||unistr('\000a')||
+'    lco_exact_ignore_case       const'||
+'ant gt_string := ''EIC'';'||unistr('\000a')||
 '    lco_exact_case_sensitive    constant gt_string := ''ECS'';'||unistr('\000a')||
 ''||unistr('\000a')||
 '    l_placeholder gt_string;'||unistr('\000a')||
@@ -407,8 +407,8 @@ wwv_flow_api.create_plugin (
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
 '    if (l_rapid_selection is null) then'||unistr('\000a')||
-'      l_rap'||
-'id_selection := '''';'||unistr('\000a')||
+'     '||
+' l_rapid_selection := '''';'||unistr('\000a')||
 '    else'||unistr('\000a')||
 '      l_rapid_selection := ''false'';'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
@@ -423,15 +423,15 @@ wwv_flow_api.create_plugin (
 '      $("'' || l_item_jq || ''").select2({'' ||'||unistr('\000a')||
 '        add_js_attr(''width'', l_width, true) ||'||unistr('\000a')||
 '        add_js_attr(''placeholder'', l_placeholder, true) ||'||unistr('\000a')||
-'        add_js_attr(''allowClea'||
-'r'', ''true'') ||'||unistr('\000a')||
+'        add_js_attr(''all'||
+'owClear'', ''true'') ||'||unistr('\000a')||
 '        add_js_attr(''minimumInputLength'', l_min_input_length) ||'||unistr('\000a')||
 '        add_js_attr(''maximumInputLength'', l_max_input_length) ||'||unistr('\000a')||
 '        add_js_attr(''minimumResultsForSearch'', l_min_results_for_search) ||'||unistr('\000a')||
 '        add_js_attr(''maximumSelectionSize'', l_max_selection_size) ||'||unistr('\000a')||
 '        add_js_attr(''closeOnSelect'', l_rapid_selection) ||'||unistr('\000a')||
-'        add_js_attr(''selectOnBlur'', l_select_on_blu'||
-'r);'||unistr('\000a')||
+'        add_js_attr(''selectOnBlur'', l_select_'||
+'on_blur);'||unistr('\000a')||
 ''||unistr('\000a')||
 '    if (l_no_matches_msg is not null) then'||unistr('\000a')||
 '      l_code := l_code || '''||unistr('\000a')||
@@ -443,8 +443,8 @@ wwv_flow_api.create_plugin (
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
 '    if (l_input_too_short_msg is not null) then'||unistr('\000a')||
-'      l_code := l_code '||
-'|| '''||unistr('\000a')||
+'      l_code := l'||
+'_code || '''||unistr('\000a')||
 '        formatInputTooShort: function(term, minLength) {'||unistr('\000a')||
 '                               var msg = "'' || l_input_too_short_msg || ''";'||unistr('\000a')||
 '                               msg = msg.replace("#TERM#", term);'||unistr('\000a')||
@@ -453,8 +453,8 @@ wwv_flow_api.create_plugin (
 '                             },'';'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
-'    if (l_selection_too_big_ms'||
-'g is not null) then'||unistr('\000a')||
+'    if (l_selection_too_'||
+'big_msg is not null) then'||unistr('\000a')||
 '      l_code := l_code || '''||unistr('\000a')||
 '        formatSelectionTooBig: function(maxSize) {'||unistr('\000a')||
 '                                 var msg = "'' || l_selection_too_big_msg || ''";'||unistr('\000a')||
@@ -464,8 +464,8 @@ wwv_flow_api.create_plugin (
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
 '    if (l_searching_msg is not null) then'||unistr('\000a')||
-'      l_cod'||
-'e := l_code || '''||unistr('\000a')||
+'     '||
+' l_code := l_code || '''||unistr('\000a')||
 '        formatSearching: function() {'||unistr('\000a')||
 '                           var msg = "'' || l_searching_msg || ''";'||unistr('\000a')||
 '                           return msg;'||unistr('\000a')||
@@ -475,15 +475,15 @@ wwv_flow_api.create_plugin (
 '    if (l_search_logic != lco_contains_ignore_case) then'||unistr('\000a')||
 '      case l_search_logic'||unistr('\000a')||
 '        when lco_contains_case_sensitive then l_search_logic := ''return text.indexOf(term) >= 0;'';'||unistr('\000a')||
-'        when lc'||
-'o_exact_ignore_case then l_search_logic := ''return text.toUpperCase() === term.toUpperCase() || term.length === 0;'';'||unistr('\000a')||
+'        w'||
+'hen lco_exact_ignore_case then l_search_logic := ''return text.toUpperCase() === term.toUpperCase() || term.length === 0;'';'||unistr('\000a')||
 '        when lco_exact_case_sensitive then l_search_logic := ''return text === term || term.length === 0;'';'||unistr('\000a')||
 '        else l_search_logic := ''return text.toUpperCase().indexOf(term.toUpperCase()) >= 0;'';'||unistr('\000a')||
 '      end case;'||unistr('\000a')||
 ''||unistr('\000a')||
 '      l_code := l_code || '''||unistr('\000a')||
-'        matcher: function(term, text)'||
-' {'||unistr('\000a')||
+'        matcher: function(term,'||
+' text) {'||unistr('\000a')||
 '                   '' || l_search_logic || '''||unistr('\000a')||
 '                 },'';'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
@@ -501,8 +501,8 @@ wwv_flow_api.create_plugin (
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
 '    return l_code;'||unistr('\000a')||
-'  end get_select2_constru'||
-'ctor;'||unistr('\000a')||
+'  end get_select2_c'||
+'onstructor;'||unistr('\000a')||
 ''||unistr('\000a')||
 ''||unistr('\000a')||
 '  function get_sortable_constructor'||unistr('\000a')||
@@ -514,8 +514,8 @@ wwv_flow_api.create_plugin (
 '        containment: "parent",'||unistr('\000a')||
 '        start: function() { $("'' || l_item_jq || ''").select2("onSortStart"); },'||unistr('\000a')||
 '        update: function() { $("'' || l_item_jq || ''").select2("onSortEnd"); }'||unistr('\000a')||
-'      });'||
-''';'||unistr('\000a')||
+'   '||
+'   });'';'||unistr('\000a')||
 ''||unistr('\000a')||
 '    return l_code;'||unistr('\000a')||
 '  end get_sortable_constructor;'||unistr('\000a')||
@@ -527,14 +527,14 @@ wwv_flow_api.create_plugin (
 '  if (p_is_readonly or p_is_printer_friendly) then'||unistr('\000a')||
 '    apex_plugin_util.print_hidden_if_readonly(p_item.name, p_value, p_is_readonly, p_is_printer_friendly);'||unistr('\000a')||
 ''||unistr('\000a')||
-'    l_display_values := apex_'||
-'plugin_util.get_display_data('||unistr('\000a')||
+'    l_display_values :='||
+' apex_plugin_util.get_display_data('||unistr('\000a')||
 '                          p_sql_statement     => p_item.lov_definition,'||unistr('\000a')||
 '                          p_min_columns       => gco_min_lov_cols,'||unistr('\000a')||
 '                          p_max_columns       => gco_max_lov_cols,'||unistr('\000a')||
 '                          p_component_name    => p_item.name,'||unistr('\000a')||
-'                          p_search_value_list => apex_util.string_to_table(p_value, nvl(l_source_value'||
-'_separator, '':'')),'||unistr('\000a')||
+'                          p_search_value_list => apex_util.string_to_table(p_value, nvl(l_source'||
+'_value_separator, '':'')),'||unistr('\000a')||
 '                          p_display_extra     => p_item.lov_display_extra'||unistr('\000a')||
 '                        );'||unistr('\000a')||
 ''||unistr('\000a')||
@@ -544,8 +544,8 @@ wwv_flow_api.create_plugin (
 '        p_display_value    => l_display_values(1),'||unistr('\000a')||
 '        p_show_line_breaks => false,'||unistr('\000a')||
 '        p_escape           => p_item.escape_output,'||unistr('\000a')||
-'        p_at'||
-'tributes       => p_item.element_attributes'||unistr('\000a')||
+'      '||
+'  p_attributes       => p_item.element_attributes'||unistr('\000a')||
 '      );'||unistr('\000a')||
 '    elsif (l_display_values.count > 1) then'||unistr('\000a')||
 '      sys.htp.p('''||unistr('\000a')||
@@ -560,8 +560,8 @@ wwv_flow_api.create_plugin (
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
 '    return l_render_result;'||unistr('\000a')||
-'  end i'||
-'f;'||unistr('\000a')||
+' '||
+' end if;'||unistr('\000a')||
 ''||unistr('\000a')||
 '  apex_javascript.add_library('||unistr('\000a')||
 '    p_name      => ''select2.min'','||unistr('\000a')||
@@ -577,9 +577,9 @@ wwv_flow_api.create_plugin (
 '    p_name      => ''select2'','||unistr('\000a')||
 '    p_directory => p_plugin.file_prefix,'||unistr('\000a')||
 '    p_version   => null'||unistr('\000a')||
-'  );'||unistr('\000a')||
-'  ap'||
-'ex_css.add_file('||unistr('\000a')||
+'  )'||
+';'||unistr('\000a')||
+'  apex_css.add_file('||unistr('\000a')||
 '    p_name      => ''select2-bootstrap'','||unistr('\000a')||
 '    p_directory => p_plugin.file_prefix,'||unistr('\000a')||
 '    p_version   => null'||unistr('\000a')||
@@ -595,8 +595,8 @@ wwv_flow_api.create_plugin (
 '    sys.htp.p('''||unistr('\000a')||
 '      <input type="hidden"'||unistr('\000a')||
 '             id="'' || p_item.name || ''"'||unistr('\000a')||
-'             name="'' || apex_plug'||
-'in.get_input_name_for_page_item(true) || ''"'||unistr('\000a')||
+'             name="'' || ape'||
+'x_plugin.get_input_name_for_page_item(true) || ''"'||unistr('\000a')||
 '             value="'' || p_value || ''"'' ||'||unistr('\000a')||
 '             p_item.element_attributes || ''>'');'||unistr('\000a')||
 '  else'||unistr('\000a')||
@@ -605,8 +605,8 @@ wwv_flow_api.create_plugin (
 '              id="'' || p_item.name || ''"'||unistr('\000a')||
 '              name="'' || apex_plugin.get_input_name_for_page_item(true) || ''"'||unistr('\000a')||
 '              class="selectlist"'' ||'||unistr('\000a')||
-'              p_item.element_attributes || ''>'');'||
-''||unistr('\000a')||
+'              p_item.element_attributes ||'||
+' ''>'');'||unistr('\000a')||
 ''||unistr('\000a')||
 '    sys.htp.p(get_options_html(p_item, p_plugin, p_value));'||unistr('\000a')||
 ''||unistr('\000a')||
@@ -621,10 +621,10 @@ wwv_flow_api.create_plugin (
 '  if (l_drag_and_drop_sorting is not null) then'||unistr('\000a')||
 '    select substr(version_no, 1, 3)'||unistr('\000a')||
 '    into l_apex_version'||unistr('\000a')||
-'    from apex_release;'||unistr('\000a')||
+'    from apex_release;'||
 ''||unistr('\000a')||
-'    '||
-'if (l_apex_version = ''4.1'') then'||unistr('\000a')||
+''||unistr('\000a')||
+'    if (l_apex_version = ''4.1'') then'||unistr('\000a')||
 '      apex_javascript.add_library('||unistr('\000a')||
 '        p_name      => ''jquery-ui.custom.min'','||unistr('\000a')||
 '        p_directory => p_plugin.file_prefix,'||unistr('\000a')||
@@ -634,9 +634,9 @@ wwv_flow_api.create_plugin (
 '      apex_javascript.add_library('||unistr('\000a')||
 '        p_name      => ''jquery.ui.sortable.min'','||unistr('\000a')||
 '        p_directory => ''#IMAGE_PREFIX#libraries/jquery-ui/1.8.22/ui/minified/'','||unistr('\000a')||
-'        p_version   => null'||unistr('\000a')||
-'  '||
-'    );'||unistr('\000a')||
+'        p_version   => n'||
+'ull'||unistr('\000a')||
+'      );'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
 '    l_onload_code := l_onload_code || get_sortable_constructor();'||unistr('\000a')||
@@ -649,8 +649,8 @@ wwv_flow_api.create_plugin (
 '      l_items_for_session_state_jq := l_items_for_session_state_jq || '','' || l_cascade_items_to_submit_jq;'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
-'    l_on'||
-'load_code := l_onload_code || '''||unistr('\000a')||
+'  '||
+'  l_onload_code := l_onload_code || '''||unistr('\000a')||
 '      $("'' || l_cascade_parent_items_jq || ''").on("change", function(e) {'';'||unistr('\000a')||
 ''||unistr('\000a')||
 '    if (p_item.ajax_optimize_refresh) then'||unistr('\000a')||
@@ -659,8 +659,8 @@ wwv_flow_api.create_plugin (
 '      l_optimize_refresh_condition := ''$("'' || l_cascade_parent_items(1) || ''").val() === ""'';'||unistr('\000a')||
 ''||unistr('\000a')||
 '      for i in 2 .. l_cascade_parent_items.count loop'||unistr('\000a')||
-'      '||
-'  l_optimize_refresh_condition := l_optimize_refresh_condition || '' || $("'' || l_cascade_parent_items(i) || ''").val() === ""'';'||unistr('\000a')||
+''||
+'        l_optimize_refresh_condition := l_optimize_refresh_condition || '' || $("'' || l_cascade_parent_items(i) || ''").val() === ""'';'||unistr('\000a')||
 '      end loop;'||unistr('\000a')||
 ''||unistr('\000a')||
 '      l_onload_code := l_onload_code || '''||unistr('\000a')||
@@ -669,8 +669,8 @@ wwv_flow_api.create_plugin (
 ''||unistr('\000a')||
 '      if (l_select_list_type = ''TAG'') then'||unistr('\000a')||
 '        l_onload_code := l_onload_code ||'||unistr('\000a')||
-'          get_select2_const'||
-'ructor('||unistr('\000a')||
+'          get_select2'||
+'_constructor('||unistr('\000a')||
 '            p_include_tags    => false,'||unistr('\000a')||
 '            p_end_constructor => false'||unistr('\000a')||
 '          ) || '','||unistr('\000a')||
@@ -686,8 +686,8 @@ wwv_flow_api.create_plugin (
 '        end if;'||unistr('\000a')||
 '      end if;'||unistr('\000a')||
 ''||unistr('\000a')||
-'      '||
-'l_onload_code := l_onload_code || '''||unistr('\000a')||
+''||
+'      l_onload_code := l_onload_code || '''||unistr('\000a')||
 '          item.select2("data", null);'||unistr('\000a')||
 '        } else {'';'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
@@ -696,8 +696,8 @@ wwv_flow_api.create_plugin (
 '            "'' || apex_plugin.get_ajax_identifier || ''",'||unistr('\000a')||
 '            { pageItems: "'' || l_items_for_session_state_jq || ''" },'||unistr('\000a')||
 '            { refreshObject: "'' || l_item_jq || ''",'||unistr('\000a')||
-'              loadingIndicator: "'' || l_item_'||
-'jq || ''",'||unistr('\000a')||
+'              loadingIndicator: "'' || l'||
+'_item_jq || ''",'||unistr('\000a')||
 '              loadingIndicatorPosition: "after",'';'||unistr('\000a')||
 '    if (l_select_list_type = ''TAG'' and l_return_value_based_on = ''RETURN'') then'||unistr('\000a')||
 '      l_onload_code := l_onload_code || '''||unistr('\000a')||
@@ -707,17 +707,17 @@ wwv_flow_api.create_plugin (
 '              dataType: "text",'';'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
 '      l_onload_code := l_onload_code || '''||unistr('\000a')||
-'              success: function(pData) {'||unistr('\000a')||
-'   '||
-'                      var item = $("'' || l_item_jq || ''");'';'||unistr('\000a')||
+'              success: function(pData)'||
+' {'||unistr('\000a')||
+'                         var item = $("'' || l_item_jq || ''");'';'||unistr('\000a')||
 '    if (l_select_list_type = ''TAG'') then'||unistr('\000a')||
 '      if (l_return_value_based_on = ''DISPLAY'') then'||unistr('\000a')||
 '        l_onload_code := l_onload_code || '''||unistr('\000a')||
 '                         var tagsArray;'||unistr('\000a')||
 '                         tagsArray = pData.slice(0, -1).split(",");'||unistr('\000a')||
 '                         if (tagsArray.length === 1 && tagsArray[0] === "") {'||unistr('\000a')||
-'                '||
-'           tagsArray = [];'||unistr('\000a')||
+'          '||
+'                 tagsArray = [];'||unistr('\000a')||
 '                         }'';'||unistr('\000a')||
 '      else'||unistr('\000a')||
 '        l_onload_code := l_onload_code || '''||unistr('\000a')||
@@ -731,9 +731,9 @@ wwv_flow_api.create_plugin (
 '           ) || '','||unistr('\000a')||
 '        tags: tagsArray'||unistr('\000a')||
 '      });'';'||unistr('\000a')||
-'    else'||unistr('\000a')||
-' '||
-'     l_onload_code := l_onload_code || '''||unistr('\000a')||
+'    '||
+'else'||unistr('\000a')||
+'      l_onload_code := l_onload_code || '''||unistr('\000a')||
 '      item.html(pData);'';'||unistr('\000a')||
 '    end if;'||unistr('\000a')||
 ''||unistr('\000a')||
@@ -748,8 +748,8 @@ wwv_flow_api.create_plugin (
 '  end if;'||unistr('\000a')||
 ''||unistr('\000a')||
 '  l_onload_code := l_onload_code || '''||unistr('\000a')||
-'      beCtbSelect2.events.bind("'' || l_item_'||
-'jq || ''");'';'||unistr('\000a')||
+'      beCtbSelect2.events.bind("'' || l'||
+'_item_jq || ''");'';'||unistr('\000a')||
 ''||unistr('\000a')||
 '  apex_javascript.add_onload_code(l_onload_code);'||unistr('\000a')||
 '  l_render_result.is_navigable := true;'||unistr('\000a')||
@@ -763,8 +763,8 @@ wwv_flow_api.create_plugin (
 '         )'||unistr('\000a')||
 'return apex_plugin.t_page_item_ajax_result is'||unistr('\000a')||
 '  l_select_list_type gt_string := p_item.attribute_01;'||unistr('\000a')||
-'  l_result apex_plugin.t_page_item_aj'||
-'ax_result;'||unistr('\000a')||
+'  l_result apex_plugin.t_page_i'||
+'tem_ajax_result;'||unistr('\000a')||
 'begin'||unistr('\000a')||
 '  if (l_select_list_type = ''TAG'') then'||unistr('\000a')||
 '    sys.htp.p(get_tags_option(p_item, false));'||unistr('\000a')||
@@ -792,7 +792,7 @@ wwv_flow_api.create_plugin (
 ' ORDER BY grp, d'||unistr('\000a')||
 '</pre>'
  ,p_substitute_attributes => true
- ,p_version_identifier => '2.4'
+ ,p_version_identifier => '2.4.1'
  ,p_about_url => 'http://apex.oracle.com/pls/apex/f?p=64237:20'
   );
 wwv_flow_api.create_plugin_attribute (

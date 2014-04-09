@@ -17,7 +17,7 @@ More information and downloads can be found [here](http://apex.oracle.com/pls/ap
 
 ##Current Stable Version
 
-Version 2.4
+Version 2.4.1
 
 ##Contributors
 * [Martin Giffy D'Souza](https://github.com/martindsouza)

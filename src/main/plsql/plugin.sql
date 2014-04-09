@@ -210,7 +210,7 @@ begin
   else
     for i in 1 .. l_lov(gco_lov_display_col).count loop
       l_tags_option := l_tags_option || '{' ||
-                                           add_js_attr('"id"', l_lov(gco_lov_return_col)(i)) ||
+                                           add_js_attr('"id"', l_lov(gco_lov_return_col)(i), true) ||
                                            add_js_attr('"text"', l_lov(gco_lov_display_col)(i), true, false) ||
                                         '},';
     end loop;
