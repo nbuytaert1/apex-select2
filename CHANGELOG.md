@@ -58,3 +58,6 @@ Changelog
 
 ####v2.4.2 - 03/09/2014
 * upgraded the Select2 libraries to version 3.5.1 ([issue #29](https://github.com/nbuytaert1/apex-select2/issues/29))
+
+####v2.4.3 - 07/11/2014
+* upgraded the Select2 libraries to version 3.5.2
