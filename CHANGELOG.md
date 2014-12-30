@@ -61,3 +61,6 @@ Changelog
 
 ####v2.4.3 - 07/11/2014
 * upgraded the Select2 libraries to version 3.5.2
+
+####v2.5 - 30/12/2014
+* implemented lazy loading ([issue #30](https://github.com/nbuytaert1/apex-select2/issues/30))

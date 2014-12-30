@@ -10,6 +10,20 @@ gco_lov_group_col   constant number := 3;
 
 
 -- UTIL
+function convert_to_hex_value(in_value in gt_string)
+return gt_string is
+  l_hex_value gt_string;
+  l_current_char varchar2(1);
+begin
+  for i in 1 .. length(in_value) loop
+    l_current_char := substr(in_value, i, 1);
+    l_hex_value := l_hex_value || '\u' || lpad(rawtohex(sys.utl_raw.cast_to_raw(l_current_char)), 4, '0');
+  end loop;
+
+  return l_hex_value;
+end convert_to_hex_value;
+
+
 function add_js_attr(
            p_param_name     in gt_string,
            p_param_value    in gt_string,
@@ -192,45 +206,55 @@ return gt_string is
   l_lov                   apex_plugin_util.t_column_value_list;
   l_select_list_type      gt_string := p_item.attribute_01;
   l_return_value_based_on gt_string := p_item.attribute_12;
+  l_application_process   gt_string := p_item.attribute_14;
   l_tags_option           gt_string;
 begin
-  l_lov := get_lov(p_item);
+  if (l_application_process is not null) then
+    l_tags_option := 'true';
 
-  if (l_select_list_type != 'TAG' or
-     (l_select_list_type = 'TAG' and l_return_value_based_on = 'DISPLAY')) then
     if (p_include_key) then
-      for i in 1 .. l_lov(gco_lov_display_col).count loop
-        l_tags_option := l_tags_option || '"' || l_lov(gco_lov_display_col)(i) || '",';
-      end loop;
-    elsif (not p_include_key) then
-      for i in 1 .. l_lov(gco_lov_display_col).count loop
-        l_tags_option := l_tags_option || l_lov(gco_lov_display_col)(i) || ',';
-      end loop;
+      l_tags_option := '
+        tags: ' || l_tags_option;
     end if;
   else
-    for i in 1 .. l_lov(gco_lov_display_col).count loop
-      l_tags_option := l_tags_option || '{' ||
-                                           add_js_attr('"id"', l_lov(gco_lov_return_col)(i), true) ||
-                                           add_js_attr('"text"', l_lov(gco_lov_display_col)(i), true, false) ||
-                                        '},';
-    end loop;
+    l_lov := get_lov(p_item);
 
-    if (not p_include_key) then
-      if (l_lov(gco_lov_display_col).count > 0) then
-        l_tags_option := substr(l_tags_option, 0, length(l_tags_option) - 1);
+    if (l_select_list_type != 'TAG' or
+       (l_select_list_type = 'TAG' and l_return_value_based_on = 'DISPLAY')) then
+      if (p_include_key) then
+        for i in 1 .. l_lov(gco_lov_display_col).count loop
+          l_tags_option := l_tags_option || '"' || convert_to_hex_value(l_lov(gco_lov_display_col)(i)) || '",';
+        end loop;
+      elsif (not p_include_key) then
+        for i in 1 .. l_lov(gco_lov_display_col).count loop
+          l_tags_option := l_tags_option || convert_to_hex_value(l_lov(gco_lov_display_col)(i)) || ',';
+        end loop;
       end if;
+    else
+      for i in 1 .. l_lov(gco_lov_display_col).count loop
+        l_tags_option := l_tags_option || '{' ||
+                                             add_js_attr('"id"', convert_to_hex_value(l_lov(gco_lov_return_col)(i)), true) ||
+                                             add_js_attr('"text"', convert_to_hex_value(l_lov(gco_lov_display_col)(i)), true, false) ||
+                                          '},';
+      end loop;
 
-      return '[' || l_tags_option || ']';
+      if (not p_include_key) then
+        if (l_lov(gco_lov_display_col).count > 0) then
+          l_tags_option := substr(l_tags_option, 0, length(l_tags_option) - 1);
+        end if;
+
+        return '[' || l_tags_option || ']';
+      end if;
     end if;
-  end if;
 
-  if (l_lov(gco_lov_display_col).count > 0) then
-    l_tags_option := substr(l_tags_option, 0, length(l_tags_option) - 1);
-  end if;
+    if (l_lov(gco_lov_display_col).count > 0) then
+      l_tags_option := substr(l_tags_option, 0, length(l_tags_option) - 1);
+    end if;
 
-  if (p_include_key) then
-    l_tags_option := '
+    if (p_include_key) then
+      l_tags_option := '
         tags: [' || l_tags_option || ']';
+    end if;
   end if;
 
   return l_tags_option;
@@ -265,6 +289,7 @@ return apex_plugin.t_page_item_render_result is
   l_drag_and_drop_sorting   gt_string := p_item.attribute_11;
   l_return_value_based_on   gt_string := p_item.attribute_12;
   l_source_value_separator  gt_string := p_item.attribute_13;
+  l_application_process     gt_string := p_item.attribute_14;
 
   l_display_values apex_application_global.vc_arr2;
   l_multiselect    gt_string;
@@ -291,6 +316,10 @@ return apex_plugin.t_page_item_render_result is
     lco_contains_case_sensitive constant gt_string := 'CCS';
     lco_exact_ignore_case       constant gt_string := 'EIC';
     lco_exact_case_sensitive    constant gt_string := 'ECS';
+
+    l_lov             apex_plugin_util.t_column_value_list;
+    l_selected_values apex_application_global.vc_arr2;
+    l_json            gt_string;
 
     l_placeholder gt_string;
     l_code        gt_string;
@@ -328,6 +357,11 @@ return apex_plugin.t_page_item_render_result is
         add_js_attr('maximumSelectionSize', l_max_selection_size) ||
         add_js_attr('closeOnSelect', l_rapid_selection) ||
         add_js_attr('selectOnBlur', l_select_on_blur);
+
+    if (l_select_list_type = 'MULTI' and l_application_process is not null) then
+      l_code := l_code ||
+        add_js_attr('multiple', 'true');
+    end if;
 
     if (l_no_matches_msg is not null) then
       l_code := l_code || '
@@ -377,6 +411,71 @@ return apex_plugin.t_page_item_render_result is
         matcher: function(term, text) {
                    ' || l_search_logic || '
                  },';
+    end if;
+
+    if (l_application_process is not null) then
+      l_lov := get_lov(p_item);
+      l_selected_values := apex_util.string_to_table(p_value, nvl(l_source_value_separator, ':'));
+
+      for i in 1 .. l_selected_values.count loop
+        for j in 1 .. l_lov(gco_lov_display_col).count loop
+          if (l_selected_values(i) = l_lov(gco_lov_return_col)(j)) then
+            l_json := l_json || '{R:"' || convert_to_hex_value(l_lov(gco_lov_return_col)(j)) || '",
+                                  D:"' || convert_to_hex_value(l_lov(gco_lov_display_col)(j)) || '"},';
+            exit;
+          end if;
+        end loop;
+      end loop;
+
+      -- trim off the last comma
+      l_json := substr(l_json, 0, length(l_json) - 1);
+
+      -- do not pass an array of objects for single select lists
+      if (l_select_list_type != 'SINGLE') then
+        l_json := '[' || l_json || ']';
+      end if;
+
+      l_code := l_code || '
+        ajax: {
+          url: "wwv_flow.show",
+          type: "POST",
+          dataType: "json",
+          quietMillis: 250,
+          data: function (term, page) {
+                  return {
+                    p_flow_id: $("#pFlowId").val(),
+                    p_flow_step_id: $("#pFlowStepId").val(),
+                    p_instance: $("#pInstance").val(),
+                    x01: term,
+                    p_request: "APPLICATION_PROCESS=' || l_application_process || '"
+                  };
+                },
+          results: function (data, page) {
+                     return { results: data.row };
+                   },
+          cache: true
+        },
+        initSelection: function(element, callback) {
+                         callback(' || l_json || ');
+                       },
+        id: function(item) {
+              return item.R;
+            },
+        formatResult: function(item) {
+                        return item.D;
+                      },
+        formatSelection: function(item) {
+                           return item.D;
+                         },';
+    end if;
+
+    if (l_select_list_type = 'TAG' and l_application_process is not null) then
+      l_code := l_code || '
+        createSearchChoice: function(term) {
+          if ($.trim(term).length != 0) {
+            return {R: term, D: term};
+          }
+        },';
     end if;
 
     l_code := l_code || '
@@ -475,9 +574,9 @@ begin
     l_multiselect := '';
   end if;
 
-  if (l_select_list_type = 'TAG') then
+  if (l_select_list_type = 'TAG' or l_application_process is not null) then
     sys.htp.p('
-      <input type="hidden"
+      <input type="hidden"' || '
              id="' || p_item.name || '"
              name="' || apex_plugin.get_input_name_for_page_item(true) || '"
              value="' || p_value || '"' ||
@@ -594,7 +693,7 @@ begin
                          }';
       else
         l_onload_code := l_onload_code || '
-                         var tagsArray = pData;';
+                         var tagsArray = pData';
       end if;
 
       l_onload_code := l_onload_code || '
