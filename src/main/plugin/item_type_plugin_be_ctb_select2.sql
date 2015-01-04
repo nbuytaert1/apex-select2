@@ -1289,7 +1289,7 @@ wwv_flow_api.create_plugin_attribute (
  ,p_is_translatable => false
  ,p_help_text => 'The name of the "On Demand" PL/SQL process that generates JSON data to populate the Select2 page item when requested. Use the aliases "R" and "D" for respectively the return and display column.'||unistr('\000a')||
 ''||unistr('\000a')||
-'More information can be found here: https://apexplained.wordpress.com/2014/12/30/lazy-loading-in-the-select2-apex-plugin'
+'More information can be found here: https://apexplained.wordpress.com/2015/01/03/lazy-loading-in-the-select2-apex-plugin/'
   );
 wwv_flow_api.create_plugin_event (
   p_id => 6820910004050964 + wwv_flow_api.g_id_offset
