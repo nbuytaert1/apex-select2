@@ -64,3 +64,8 @@ Changelog
 
 ####v2.5 - 30/12/2014
 * implemented lazy loading ([issue #30](https://github.com/nbuytaert1/apex-select2/issues/30))
+
+####v2.6 - 11/01/2015
+* improved lazy loading - no remote data process needed anymore
+* added the lazy-appending feature ([issue #32](https://github.com/nbuytaert1/apex-select2/issues/32))
+* added an application attribute to make the "Loading more results..." message adjustable
