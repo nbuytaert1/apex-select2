@@ -8,10 +8,12 @@ gco_lov_display_col constant number := 1;
 gco_lov_return_col  constant number := 2;
 gco_lov_group_col   constant number := 3;
 
-gco_contains_ignore_case    constant varchar2(3) := 'CIC';
-gco_contains_case_sensitive constant varchar2(3) := 'CCS';
-gco_exact_ignore_case       constant varchar2(3) := 'EIC';
-gco_exact_case_sensitive    constant varchar2(3) := 'ECS';
+gco_contains_ignore_case       constant varchar2(3) := 'CIC';
+gco_contains_case_sensitive    constant varchar2(3) := 'CCS';
+gco_exact_ignore_case          constant varchar2(3) := 'EIC';
+gco_exact_case_sensitive       constant varchar2(3) := 'ECS';
+gco_starts_with_ignore_case    constant varchar2(3) := 'SIC';
+gco_starts_with_case_sensitive constant varchar2(3) := 'SCS';
 
 
 -- UTIL
@@ -401,6 +403,8 @@ return apex_plugin.t_page_item_render_result is
         when gco_contains_case_sensitive then l_search_logic := 'return text.indexOf(term) >= 0;';
         when gco_exact_ignore_case then l_search_logic := 'return text.toUpperCase() === term.toUpperCase() || term.length === 0;';
         when gco_exact_case_sensitive then l_search_logic := 'return text === term || term.length === 0;';
+        when gco_starts_with_ignore_case then l_search_logic := 'return text.toUpperCase().indexOf(term.toUpperCase()) === 0;';
+        when gco_starts_with_case_sensitive then l_search_logic := 'return text.indexOf(term) === 0;';
         else l_search_logic := 'return text.toUpperCase().indexOf(term.toUpperCase()) >= 0;';
       end case;
 

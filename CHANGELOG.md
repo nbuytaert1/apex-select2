@@ -69,3 +69,6 @@ Changelog
 * improved lazy loading - no remote data process needed anymore
 * added the lazy-appending feature ([issue #32](https://github.com/nbuytaert1/apex-select2/issues/32))
 * added an application attribute to make the "Loading more results..." message adjustable
+
+####v2.6.1 - 10/02/2015
+* extended the matcher function with more search options: "Starts With & Ignore Case" and "Starts With & Case Sensitive"([issue #37](https://github.com/nbuytaert1/apex-select2/issues/37))
