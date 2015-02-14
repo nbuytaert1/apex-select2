@@ -72,3 +72,7 @@ Changelog
 
 ####v2.6.1 - 10/02/2015
 * extended the matcher function with more search options: "Starts With & Ignore Case" and "Starts With & Case Sensitive"([issue #37](https://github.com/nbuytaert1/apex-select2/issues/37))
+
+####v2.6.2 - 14/02/2015
+* trigger change event in the apex.jQuery namespace when working with multiple jQuery versions ([issue #38](https://github.com/nbuytaert1/apex-select2/issues/38)) - pull request by Stijn Van Raes
+* synchronized Select2 and APEX_PLUGIN_UTIL search logic

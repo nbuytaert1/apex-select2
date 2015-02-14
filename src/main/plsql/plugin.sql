@@ -764,19 +764,21 @@ begin
     l_search_page := apex_application.g_x02;
     l_first_row := ((l_search_page - 1) * nvl(l_lazy_append_row_count, 0)) + 1;
 
-    -- translate Select2 search logic into apex_plugin_util search logic
+    -- translate Select2 search logic into APEX_PLUGIN_UTIL search logic
     -- the percentage wildcard returns all rows whenever the search string is null
     case l_search_logic
       when gco_contains_case_sensitive then
-        l_apex_plugin_search_logic := apex_plugin_util.c_search_like_case;
+        l_apex_plugin_search_logic := apex_plugin_util.c_search_like_case; -- uses LIKE %value%
       when gco_exact_ignore_case then
-        l_apex_plugin_search_logic := apex_plugin_util.c_search_exact_ignore;
-        l_search_string := upper(l_search_string);
+        l_apex_plugin_search_logic := apex_plugin_util.c_search_exact_ignore; -- uses LIKE VALUE% with UPPER (not completely correct)
       when gco_exact_case_sensitive then
-        l_apex_plugin_search_logic := apex_plugin_util.c_search_exact_case;
+        l_apex_plugin_search_logic := apex_plugin_util.c_search_lookup; -- uses = value
+      when gco_starts_with_ignore_case then
+        l_apex_plugin_search_logic := apex_plugin_util.c_search_exact_ignore; -- uses LIKE VALUE% with UPPER
+      when gco_starts_with_case_sensitive then
+        l_apex_plugin_search_logic := apex_plugin_util.c_search_exact_case; -- uses LIKE value%
       else
-        l_apex_plugin_search_logic := apex_plugin_util.c_search_like_ignore;
-        l_search_string := upper(l_search_string);
+        l_apex_plugin_search_logic := apex_plugin_util.c_search_like_ignore; -- uses LIKE %VALUE% with UPPER
     end case;
 
     l_lov := apex_plugin_util.get_data(
@@ -786,7 +788,10 @@ begin
                p_component_name   => p_item.name,
                p_search_type      => l_apex_plugin_search_logic,
                p_search_column_no => gco_lov_display_col,
-               p_search_string    => l_search_string
+               p_search_string    => apex_plugin_util.get_search_string(
+                                       p_search_type   => l_apex_plugin_search_logic,
+                                       p_search_string => l_search_string
+                                     )
              );
 
     l_json := '{"row":[';

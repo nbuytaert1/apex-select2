@@ -23,11 +23,12 @@ More information and downloads can be found [here](http://apex.oracle.com/pls/ap
 
 ##Current Stable Version
 
-Version 2.6.1
+Version 2.6.2
 
 ##Contributors
 * [Martin Giffy D'Souza](https://github.com/martindsouza)
 * [Jorge Rimblas](https://github.com/rimblas)
+* [Stijn Van Raes](https://github.com/stijnvanraes)
 
 ##License
 
