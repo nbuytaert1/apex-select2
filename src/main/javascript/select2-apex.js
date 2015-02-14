@@ -6,6 +6,9 @@ beCtbSelect2.events = {
 
     pageItem.on("change", function(e) {
       apex.jQuery(this).trigger("slctchange", {val:e.val, added:e.added, removed:e.removed});
+      if ($.fn.jquery !== apex.jQuery.fn.jquery){
+            apex.jQuery(this).trigger("change");
+      }
     });
     pageItem.on("select2-opening", function(e) {
       apex.jQuery(this).trigger("slctopening");
