@@ -1,5 +1,27 @@
--- GLOBAL
-subtype gt_string is varchar2(32767);
+CREATE OR REPLACE PACKAGE SELECT2 AS 
+  
+  subtype gt_string is varchar2(32767);
+
+  function render(
+           p_item                in apex_plugin.t_page_item,
+           p_plugin              in apex_plugin.t_plugin,
+           p_value               in gt_string,
+           p_is_readonly         in boolean,
+           p_is_printer_friendly in boolean
+         )
+  return apex_plugin.t_page_item_render_result;
+
+  function ajax(
+           p_item   in apex_plugin.t_page_item,
+           p_plugin in apex_plugin.t_plugin
+         )
+  return apex_plugin.t_page_item_ajax_result;
+
+END SELECT2;
+/
+
+
+CREATE OR REPLACE PACKAGE BODY SELECT2 AS
 
 gco_min_lov_cols constant number := 2;
 gco_max_lov_cols constant number := 3;
@@ -289,9 +311,9 @@ return apex_plugin.t_page_item_render_result is
   l_display_values apex_application_global.vc_arr2;
   l_multiselect    gt_string;
 
-  l_item_jq                    gt_string := apex_plugin_util.page_item_names_to_jquery(p_item.name);
-  l_cascade_parent_items_jq    gt_string := apex_plugin_util.page_item_names_to_jquery(p_item.lov_cascade_parent_items);
-  l_cascade_items_to_submit_jq gt_string := apex_plugin_util.page_item_names_to_jquery(p_item.ajax_items_to_submit);
+  l_item_jq                    gt_string;
+  l_cascade_parent_items_jq    gt_string;
+  l_cascade_items_to_submit_jq gt_string;
   l_items_for_session_state_jq gt_string;
   l_cascade_parent_items       apex_application_global.vc_arr2;
   l_optimize_refresh_condition gt_string;
@@ -519,6 +541,10 @@ return apex_plugin.t_page_item_render_result is
     return l_code;
   end get_sortable_constructor;
 begin
+  l_item_jq                    := apex_plugin_util.page_item_names_to_jquery(p_item.name);
+  l_cascade_parent_items_jq    := apex_plugin_util.page_item_names_to_jquery(p_item.lov_cascade_parent_items);
+  l_cascade_items_to_submit_jq := apex_plugin_util.page_item_names_to_jquery(p_item.ajax_items_to_submit);
+
   if (apex_application.g_debug) then
     apex_plugin_util.debug_page_item(p_plugin, p_item, p_value, p_is_readonly, p_is_printer_friendly);
   end if;
@@ -833,3 +859,6 @@ begin
 
   return l_result;
 end ajax;
+
+END SELECT2;
+/
