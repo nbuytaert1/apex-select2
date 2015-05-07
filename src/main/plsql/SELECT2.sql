@@ -7,7 +7,8 @@ CREATE OR REPLACE PACKAGE SELECT2 AS
            p_plugin              in apex_plugin.t_plugin,
            p_value               in gt_string,
            p_is_readonly         in boolean,
-           p_is_printer_friendly in boolean
+           p_is_printer_friendly in boolean,
+           p_tabular_form        in boolean default false
          )
   return apex_plugin.t_page_item_render_result;
 
@@ -16,13 +17,43 @@ CREATE OR REPLACE PACKAGE SELECT2 AS
            p_plugin in apex_plugin.t_plugin
          )
   return apex_plugin.t_page_item_ajax_result;
+  
+  function display( p_lov_name                    IN gt_string,  -- when null, use p_sql_query 
+                    p_sql_query                   IN gt_string  default null,
+                    p_column_name                 IN gt_string,  -- when null
+                    p_custom_jquery_selector      IN gt_string  default null,
+                    p_value                       IN gt_string,                  
+                    --
+                    p_select_list_type            IN gt_string  default 'SINGLE',-- SINGLE,MULTI,TAG
+                    p_min_res_for_search_field    IN gt_string  default NULL, --NUMERIC
+                    p_minimum_input_length        IN gt_string  default NULL, --NUMERIC
+                    p_maximum_input_length        IN gt_string  default NULL, --NUMERIC
+                    p_maximum_selection_size      IN gt_string  default NULL, --NUMERIC
+                    p_rapid_selection             IN gt_string  default NULL, --Y,NULL
+                    p_select_on_blur              IN gt_string  default NULL, --Y,NULL
+                    p_search_logic                IN gt_string  default 'CIC', --CIC,CCS,EIC,ECS,SIC,SCS
+                    p_label_for_null_option_group IN gt_string  default NULL,
+                    p_width                       IN gt_string  default NULL,
+                    p_drag_and_drop_sorting       IN gt_string  default NULL, --Y,NULL
+                    p_return_value_based_on       IN gt_string  default 'DISPLAY', --DISPLAY,RETURN
+                    p_source_value_separator      IN gt_string  default NULL, 
+                    p_lov_display_null            IN gt_string  default NULL,
+                    p_element_option_attributes   IN gt_string  default NULL,
+                    p_escape_output               IN gt_string  default 'Y', --Y,NULL
+                    p_lov_null_text               IN gt_string  default NULL,
+                    p_lov_display_extra           IN gt_string  default 'Y', --Y,NULL
+                    p_element_attributes          IN gt_string  default NULL                  
+                  )
+  return varchar2;
+  
+    
 
 END SELECT2;
 /
 
 
 CREATE OR REPLACE PACKAGE BODY SELECT2 AS
-
+-- GLOBAL
 gco_min_lov_cols constant number := 2;
 gco_max_lov_cols constant number := 3;
 
@@ -78,7 +109,6 @@ begin
            p_component_name => p_item.name
          );
 end get_lov;
-
 
 -- PRINT LIST OF VALUES
 function get_options_html(
@@ -212,7 +242,6 @@ begin
   return '';
 end get_options_html;
 
-
 function get_tags_option(
            p_item        in apex_plugin.t_page_item,
            p_include_key in boolean
@@ -275,16 +304,17 @@ begin
   return l_tags_option;
 end get_tags_option;
 
-
 -- PLUGIN INTERFACE FUNCTIONS
 function render(
            p_item                in apex_plugin.t_page_item,
            p_plugin              in apex_plugin.t_plugin,
            p_value               in gt_string,
            p_is_readonly         in boolean,
-           p_is_printer_friendly in boolean
+           p_is_printer_friendly in boolean,
+           p_tabular_form        in boolean default false
          )
 return apex_plugin.t_page_item_render_result is
+  
   l_no_matches_msg           gt_string := p_plugin.attribute_01;
   l_input_too_short_msg      gt_string := p_plugin.attribute_02;
   l_selection_too_big_msg    gt_string := p_plugin.attribute_03;
@@ -310,7 +340,8 @@ return apex_plugin.t_page_item_render_result is
 
   l_display_values apex_application_global.vc_arr2;
   l_multiselect    gt_string;
-
+  
+  -- any calculation in header are bad style (because "features" of exception handling)
   l_item_jq                    gt_string;
   l_cascade_parent_items_jq    gt_string;
   l_cascade_items_to_submit_jq gt_string;
@@ -335,6 +366,8 @@ return apex_plugin.t_page_item_render_result is
 
     l_placeholder gt_string;
     l_code        gt_string;
+    v_data        gt_string;
+    l_lov         apex_plugin_util.t_column_value_list;
   begin
     if (p_item.lov_display_null) then
       l_placeholder := p_item.lov_null_text;
@@ -370,7 +403,7 @@ return apex_plugin.t_page_item_render_result is
         add_js_attr('closeOnSelect', l_rapid_selection) ||
         add_js_attr('selectOnBlur', l_select_on_blur);
 
-    if (l_select_list_type = 'MULTI' and l_lazy_loading is not null) then
+    if (l_select_list_type = 'MULTI') then
       l_code := l_code ||
         add_js_attr('multiple', 'true');
     end if;
@@ -435,7 +468,8 @@ return apex_plugin.t_page_item_render_result is
                    ' || l_search_logic || '
                  },';
     end if;
-
+    
+    <<lazy_loading>>
     if (l_lazy_loading is not null) then
       if (p_value is not null) then
         l_selected_values := apex_util.string_to_table(p_value, nvl(l_source_value_separator, ':'));
@@ -464,44 +498,55 @@ return apex_plugin.t_page_item_render_result is
         if (l_select_list_type != 'SINGLE') then
           l_json := '[' || l_json || ']';
         end if;
-      end if;
-
+      end if; -- p_value
+      
       l_code := l_code || '
-        ajax: {
-          url: "wwv_flow.show",
-          type: "POST",
-          dataType: "json",
-          quietMillis: 250,
-          data: function (term, page) {
-                  return {
-                    p_flow_id: $("#pFlowId").val(),
-                    p_flow_step_id: $("#pFlowStepId").val(),
-                    p_instance: $("#pInstance").val(),
-                    x01: term,
-                    x02: page,
-                    x03: "LAZY_LOAD",
-                    p_request: "PLUGIN=' || apex_plugin.get_ajax_identifier || '"
-                  };
-                },
-          results: function (data, page) {
-                     return { results: data.row, more: data.more };
-                   },
-          cache: true
-        },
-        initSelection: function(element, callback) {
-                         callback(' || l_json || ');
-                       },
-        id: function(item) {
-              return item.R;
-            },
-        formatResult: function(item) {
-                        return item.D;
-                      },
-        formatSelection: function(item) {
-                           return item.D;
-                         },';
-    end if;
-
+      ajax: {
+        url: "wwv_flow.show",
+        type: "POST",
+        dataType: "json",
+        quietMillis: 250,
+        data: function (term, page) {
+                return {
+                  p_flow_id: $("#pFlowId").val(),
+                  p_flow_step_id: $("#pFlowStepId").val(),
+                  p_instance: $("#pInstance").val(),
+                  x01: term,
+                  x02: page,
+                  x03: "LAZY_LOAD",
+                  p_request: "PLUGIN=' || apex_plugin.get_ajax_identifier || '"
+                };
+              },
+        results: function (data, page) {
+                   return { results: data.row, more: data.more };
+                 },
+        cache: true
+      },
+      initSelection: function(element, callback) {
+                       callback(' || l_json || ');
+                     },
+      id: function(item) {
+            return item.R;
+          },
+      formatResult: function(item) {
+                      return item.D;
+                    },
+      formatSelection: function(item) {
+                         return item.D;
+                       },';
+    elsif p_tabular_form then
+        v_data := '';
+        l_lov := get_lov(p_item);
+        for i in 1 .. l_lov(gco_lov_display_col).count loop
+          v_data := v_data || '{' ||
+                        apex_javascript.add_attribute('id', sys.htf.escape_sc(l_lov(gco_lov_return_col)(i)), false, true) ||
+                        apex_javascript.add_attribute('text', sys.htf.escape_sc(l_lov(gco_lov_display_col)(i)), false, false) ||
+                       '},';
+        end loop;
+        v_data := '['||rtrim(v_data, ',')||']';
+        l_code := l_code || chr(10)||'data :'||v_data||',';
+    end if; 
+    
     if (l_select_list_type = 'TAG' and l_lazy_loading is not null) then
       l_code := l_code || '
         createSearchChoice: function(term) {
@@ -512,7 +557,7 @@ return apex_plugin.t_page_item_render_result is
     end if;
 
     l_code := l_code || '
-        separator: ":"';
+        separator: "'||nvl(l_source_value_separator, ':')||'"';
 
     if (l_select_list_type = 'TAG' and p_include_tags) then
       l_code := l_code || ',' || get_tags_option(p_item, true);
@@ -540,8 +585,14 @@ return apex_plugin.t_page_item_render_result is
 
     return l_code;
   end get_sortable_constructor;
+--main function render  
 begin
-  l_item_jq                    := apex_plugin_util.page_item_names_to_jquery(p_item.name);
+  if p_tabular_form then
+    l_item_jq := p_item.name;
+  else  
+    l_item_jq := apex_plugin_util.page_item_names_to_jquery(p_item.name);
+  end if;   
+  
   l_cascade_parent_items_jq    := apex_plugin_util.page_item_names_to_jquery(p_item.lov_cascade_parent_items);
   l_cascade_items_to_submit_jq := apex_plugin_util.page_item_names_to_jquery(p_item.ajax_items_to_submit);
 
@@ -582,7 +633,7 @@ begin
     end if;
 
     return l_render_result;
-  end if;
+  end if;  -- readonly
 
   apex_javascript.add_library(
     p_name      => 'select2.min',
@@ -611,13 +662,15 @@ begin
     l_multiselect := '';
   end if;
 
-  if (l_select_list_type = 'TAG' or l_lazy_loading is not null) then
-    sys.htp.p('
-      <input type="hidden"' || '
-             id="' || p_item.name || '"
-             name="' || apex_plugin.get_input_name_for_page_item(true) || '"
-             value="' || p_value || '"' ||
-             p_item.element_attributes || '>');
+  if p_tabular_form then
+   null; 
+  elsif (l_select_list_type = 'TAG' or l_lazy_loading is not null) then
+   sys.htp.p('
+     <input type="hidden"' || '
+            id="' || p_item.name || '"
+            name="' ||apex_plugin.get_input_name_for_page_item(true)|| '"
+            value="' || p_value || '"' ||
+            p_item.element_attributes || '>');
   else
     sys.htp.p('
       <select ' || l_multiselect || '
@@ -625,9 +678,7 @@ begin
               name="' || apex_plugin.get_input_name_for_page_item(true) || '"
               class="selectlist"' ||
               p_item.element_attributes || '>');
-
     sys.htp.p(get_options_html(p_item, p_plugin, p_value));
-
     sys.htp.p('</select>');
   end if;
 
@@ -753,12 +804,12 @@ begin
     end if;
 
     l_onload_code := l_onload_code || '});';
-  end if;
+  end if; --lov_cascade_parent_items
 
   l_onload_code := l_onload_code || '
       beCtbSelect2.events.bind("' || l_item_jq || '");';
-
-  apex_javascript.add_onload_code(l_onload_code);
+  
+  apex_javascript.add_onload_code(l_onload_code,CASE WHEN p_tabular_form THEN p_item.name ELSE NULL END);
   l_render_result.is_navigable := true;
   return l_render_result;
 end render;
@@ -859,6 +910,143 @@ begin
 
   return l_result;
 end ajax;
+
+function get_bool(p_str in VARCHAR2)
+return boolean
+is
+begin
+ if p_str = 'Y' then
+   return true;
+ else
+   return false;
+ end if;
+end get_bool;
+
+/*
+  Using sample:
+   
+  select  "CUSTOMER_ID",
+          select2.display(  p_select_list_type => 'MULTI',
+                  p_lov_name => 'LOV_EMPLOYEES', 
+                  p_column_name => 'Customer Employees', -- alias in select
+                  p_value => EMPLOYEES,  -- column name in table
+                  p_width=>'200px'
+                ) as "Customer Employees"
+  from DEMO_CUSTOMERS
+
+  ! "Display As" property of "Customer Employees" need to have "Text Item" value in Classic Report Attributes.
+
+*/
+
+function display( p_lov_name                    IN gt_string,  -- when null, use p_sql_query 
+                  p_sql_query                   IN gt_string  default null,
+                  p_column_name                 IN gt_string,  -- alias in select
+                  p_custom_jquery_selector      IN gt_string  default null,
+                  p_value                       IN gt_string, -- column name in table                 
+                  --
+                  p_select_list_type            IN gt_string  default 'SINGLE',-- SINGLE,MULTI,TAG
+                  p_min_res_for_search_field    IN gt_string  default NULL, --NUMERIC
+                  p_minimum_input_length        IN gt_string  default NULL, --NUMERIC
+                  p_maximum_input_length        IN gt_string  default NULL, --NUMERIC
+                  p_maximum_selection_size      IN gt_string  default NULL, --NUMERIC
+                  p_rapid_selection             IN gt_string  default NULL, --Y,NULL
+                  p_select_on_blur              IN gt_string  default NULL, --Y,NULL
+                  p_search_logic                IN gt_string  default 'CIC', --CIC,CCS,EIC,ECS,SIC,SCS
+                  p_label_for_null_option_group IN gt_string  default NULL,
+                  p_width                       IN gt_string  default NULL,
+                  p_drag_and_drop_sorting       IN gt_string  default NULL, --Y,NULL
+                  p_return_value_based_on       IN gt_string  default 'DISPLAY', --DISPLAY,RETURN
+                  p_source_value_separator      IN gt_string  default NULL, 
+                  p_lov_display_null            IN gt_string  default NULL,
+                  p_element_option_attributes   IN gt_string  default NULL,
+                  p_escape_output               IN gt_string  default 'Y',
+                  p_lov_null_text               IN gt_string  default NULL,
+                  p_lov_display_extra           IN gt_string  default 'Y',
+                  p_element_attributes          IN gt_string  default NULL
+                )
+return varchar2
+is
+ v_item                apex_plugin.t_page_item;
+ v_plugin              apex_plugin.t_plugin;
+ v_rez                 apex_plugin.t_page_item_render_result;
+ 
+ function get_file_prifix
+ return  varchar2
+ is
+   v_plugin_id apex_appl_plugins.plugin_id%TYPE;
+ begin
+   select plugin_id 
+   into v_plugin_id
+   from apex_appl_plugins 
+   where name = 'BE.CTB.SELECT2';
+   
+   return 'wwv_flow_file_mgr.get_file?p_plugin_id='||v_plugin_id||'&p_security_group_id='||wwv_flow_api.get_security_group_id||'&p_file_name=';
+ end get_file_prifix;
+ 
+ function get_lov_definition(p_lov_name in VARCHAR2)
+ return varchar2
+ is
+   v_lov_definition APEX_APPLICATION_LOVS.list_of_values_query%TYPE;
+ begin
+    select list_of_values_query 
+    into v_lov_definition
+    from APEX_APPLICATION_LOVS 
+    where list_of_values_name = p_lov_name
+      and APPLICATION_ID = V('APP_ID');
+      
+     return v_lov_definition; 
+ end get_lov_definition;
+ 
+begin
+    v_plugin.file_prefix  := get_file_prifix;
+    v_item.attribute_01 := p_select_list_type;
+    v_item.attribute_02 := p_min_res_for_search_field;
+    v_item.attribute_03 := p_minimum_input_length;
+    v_item.attribute_04 := p_maximum_input_length;
+    v_item.attribute_05 := p_maximum_selection_size;
+    v_item.attribute_06 := p_rapid_selection;
+    v_item.attribute_07 := p_select_on_blur;
+    v_item.attribute_08 := p_search_logic;
+    v_item.attribute_09 := p_label_for_null_option_group;
+    v_item.attribute_10 := p_width;
+    v_item.attribute_11 := p_drag_and_drop_sorting;
+    v_item.attribute_12 := p_return_value_based_on;
+    v_item.attribute_13 := p_source_value_separator;
+    --v_item.attribute_14 := p_lazy_loading;
+    --v_item.attribute_15 := p_lazy_append_row_count;
+    
+    if p_custom_jquery_selector is not null then
+      v_item.name := p_custom_jquery_selector;      
+    else
+     v_item.name := 'td[headers='''||p_column_name||'''] input[name]:visible';     
+    end if; 
+    
+    v_item.lov_display_null := get_bool(p_lov_display_null);
+    v_item.element_option_attributes := p_element_option_attributes;
+    v_item.escape_output := get_bool(p_escape_output);
+    v_item.lov_null_text := p_lov_null_text;
+    v_item.lov_display_extra := get_bool(p_lov_display_extra);
+    v_item.element_attributes := p_element_attributes;
+ 
+    if p_sql_query is not null then
+      v_item.lov_definition := p_sql_query;
+    else  
+      v_item.lov_definition :=  get_lov_definition(p_lov_name);
+    end if;
+    
+    v_rez := render ( p_item                => v_item,
+                      p_plugin              => v_plugin,
+                      p_value               => p_value,
+                      p_is_readonly         => false,
+                      p_is_printer_friendly => false,
+                      p_tabular_form        => true
+                   );
+    --return apex_item.text();
+    return p_value;
+exception
+  when others then
+    raise_application_error(-20001,'SELECT2.display '||SQLERRM);
+end display;
 
 END SELECT2;
 /
