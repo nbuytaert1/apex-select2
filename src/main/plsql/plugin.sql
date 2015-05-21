@@ -339,7 +339,7 @@ return apex_plugin.t_page_item_render_result is
     l_code := '
       $("' || l_item_jq || '").select2({' ||
         add_js_attr('width', l_width, true) ||
-        add_js_attr('placeholder', l_placeholder, true) ||
+        add_js_attr('placeholder',nvl(l_placeholder,' '), true) ||
         add_js_attr('allowClear', 'true') ||
         add_js_attr('minimumInputLength', l_min_input_length) ||
         add_js_attr('maximumInputLength', l_max_input_length) ||
