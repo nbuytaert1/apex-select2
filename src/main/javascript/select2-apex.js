@@ -33,6 +33,7 @@ beCtbSelect2.events = {
     });
     pageItem.on("select2-blur", function(e) {
       apex.jQuery(this).trigger("slctblur");
+      $(this).trigger("blur");
     });
   }
 };

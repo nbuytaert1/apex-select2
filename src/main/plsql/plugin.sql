@@ -339,7 +339,7 @@ return apex_plugin.t_page_item_render_result is
     l_code := '
       $("' || l_item_jq || '").select2({' ||
         add_js_attr('width', l_width, true) ||
-        add_js_attr('placeholder',nvl(l_placeholder,' '), true) ||
+        add_js_attr('placeholder', nvl(l_placeholder, ' '), true) ||
         add_js_attr('allowClear', 'true') ||
         add_js_attr('minimumInputLength', l_min_input_length) ||
         add_js_attr('maximumInputLength', l_max_input_length) ||
@@ -621,10 +621,16 @@ begin
         p_directory => p_plugin.file_prefix,
         p_version   => null
       );
-    else
+    elsif (l_apex_version = '4.2') then
       apex_javascript.add_library(
         p_name      => 'jquery.ui.sortable.min',
         p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.8.22/ui/minified/',
+        p_version   => null
+      );
+    else
+      apex_javascript.add_library(
+        p_name      => 'jquery.ui.sortable.min',
+        p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.10.4/ui/minified/',
         p_version   => null
       );
     end if;
