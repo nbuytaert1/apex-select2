@@ -738,6 +738,11 @@ begin
   l_onload_code := l_onload_code || '
       beCtbSelect2.events.bind("' || l_item_jq || '");';
 
+  if (l_select_list_type = 'MULTI') then
+    l_onload_code := l_onload_code || '
+        info_oracleapex_text_field("' || l_item_jq || '");';
+  end if;      
+
   apex_javascript.add_onload_code(l_onload_code);
   l_render_result.is_navigable := true;
   return l_render_result;

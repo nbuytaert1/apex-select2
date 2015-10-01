@@ -37,3 +37,16 @@ beCtbSelect2.events = {
     });
   }
 };
+
+
+function info_oracleapex_text_field(pSelector)
+{
+  // Register apex.item callbacks
+  apex.jQuery(pSelector).each(function(){
+    apex.widget.initPageItem(this.id, {
+      setValue      : function(pValue, pDisplayValue) {
+        apex.jQuery('#' + this.id).val(pValue.split(':')).trigger("change");
+      }
+    });
+  });
+}
