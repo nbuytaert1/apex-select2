@@ -76,3 +76,7 @@ Changelog
 ####v2.6.2 - 14/02/2015
 * trigger change event in the apex.jQuery namespace when working with multiple jQuery versions ([issue #38](https://github.com/nbuytaert1/apex-select2/issues/38)) - pull request by Stijn Van Raes
 * synchronized Select2 and APEX_PLUGIN_UTIL search logic
+
+####v2.6.4 - 01/10/2015
+* Universal Theme integration (select2-ut.css)
+* added support for the $s() function in multi-select mode

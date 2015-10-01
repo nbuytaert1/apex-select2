@@ -1,0 +1,262 @@
+.select2-container,
+.select2-drop {
+  font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+  color: #333;
+}
+
+/* SINGLE-VALUE SELECT LIST */
+
+.select2-container .select2-choice {
+  border-radius: 2px;
+  color: #333;
+  background-image: none;
+  background-color: #f2f2f2;
+  border: 1px solid #d9d9d9;
+  font-size: 1.2rem;
+  vertical-align: top;
+  line-height: 1.6rem;
+  padding: .3rem;
+  box-shadow: 0 .1rem .2rem rgba(0,0,0,.05) inset;
+  max-width: 100%;
+  height: 2.4rem;
+}
+
+.select2-container-active .select2-choice, .select2-container-active .select2-choices {
+  border: 1px solid #2578cf;
+}
+
+.select2-container.select2-drop-above .select2-choice {
+  border-radius: 0 0 2px 2px;
+}
+
+.select2-container .select2-choice abbr {
+  top: 5px;
+}
+
+.select2-container .select2-choice .select2-arrow {
+  background-image: none;
+  background-color: #f2f2f2;
+  border-left: 1px solid #d9d9d9;
+  border-radius: 0 2px 2px 0;
+}
+
+.select2-dropdown-open .select2-choice .select2-arrow {
+  border-left: none;
+}
+
+.select2-drop {
+  border-radius: 2px;
+  color: #333;
+  background-image: none;
+  background-color: #f2f2f2;
+  border: 1px solid #d9d9d9;
+  border-radius: 0 0 2px 2px;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.select2-drop-active {
+  border: 1px solid #2578cf;
+  border-top: none;
+}
+
+.select2-drop.select2-drop-above {
+  border-radius: 2px 2px 0 0;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.select2-drop.select2-drop-above.select2-drop-active {
+  border-top: 1px solid #2578cf;
+}
+
+.select2-dropdown-open.select2-drop-above .select2-choice,
+.select2-dropdown-open.select2-drop-above .select2-choices {
+  background-image: none;
+  background-color: #f2f2f2;
+  border: 1px solid #2578cf;
+  box-shadow: none;
+}
+
+.select2-drop ul li {
+  color: #333;
+  font-size: 1.2rem;
+  line-height: 1.6rem;
+}
+
+.select2-search input {
+  background: none;
+  background-color: white;
+  border-color: #d9d9d9;
+}
+
+/* form item size large */
+.t-Form--large .select2-container .select2-choice {
+  font-size: 1.4rem;
+  padding: .7rem;
+  padding-top: 0.6rem;
+  line-height: 18px;
+  height: 3.2rem;
+}
+.t-Form--large .select2-container .select2-choice abbr {
+  top: 8px;
+}
+
+/* form item size X large */
+.t-Form--xlarge .select2-container .select2-choice {
+  font-size: 1.6rem;
+  padding: .9rem;
+  line-height: 20px;
+  height: 4rem;
+}
+.t-Form--xlarge .select2-container .select2-choice abbr {
+  top: 12px;
+}
+
+/* item size large */
+.t-Form-fieldContainer--large .select2-container .select2-choice {
+  font-size: 1.4rem;
+  padding: .7rem;
+  padding-top: 0.6rem;
+  line-height: 18px;
+  height: 3.2rem;
+}
+.t-Form-fieldContainer--large .select2-container .select2-choice abbr {
+  top: 8px;
+}
+
+/* item size X large */
+.t-Form-fieldContainer--xlarge .select2-container .select2-choice {
+  font-size: 1.6rem;
+  padding: .9rem;
+  line-height: 20px;
+  height: 4rem;
+}
+.t-Form-fieldContainer--xlarge .select2-container .select2-choice abbr {
+  top: 12px;
+}
+
+
+/* MULTI-VALUE SELECT LIST */
+
+.select2-container-multi .select2-choices {
+  border-radius: 2px;
+  color: #333;
+  background-image: none;
+  background-color: #f2f2f2;
+  border: 1px solid #d9d9d9;
+  font-size: 1.2rem;
+  vertical-align: top;
+  line-height: 1.6rem;
+  padding: .3rem;
+  box-shadow: 0 .1rem .2rem rgba(0,0,0,.05) inset;
+  max-width: 100%;
+  min-height: 2.4rem;
+}
+
+.select2-container-multi.select2-container-active .select2-choices {
+  border: 1px solid #2578cf;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.select2-container-multi .select2-choices .select2-search-field {
+  font-size: 1.2rem;
+  line-height: 1.6rem;
+}
+
+.select2-container-multi .select2-choices .select2-search-field input {
+  padding: 0;
+  margin: 0;
+  height: inherit;
+  color: #333;
+}
+
+.select2-container-multi .select2-choices .select2-search-choice {
+  padding: 1px 4px 1px 16px;
+  margin: 0 .3rem 0 0;
+  border-radius: 2px;
+  font-size: 1.2rem;
+  line-height: 12px;
+}
+
+.select2-search-choice-close {
+  top: 0;
+}
+
+/* form item size large */
+.t-Form--large .select2-container-multi .select2-choices {
+  font-size: 1.4rem;
+  padding: .7rem;
+  min-height: 3.2rem;
+}
+.t-Form--large .select2-container-multi .select2-choices .select2-search-field {
+  font-size: 1.4rem;
+  margin-bottom: -1px;
+}
+.t-Form--large .select2-container-multi .select2-choices .select2-search-choice {
+  margin: 0 .5rem 0 0;
+  font-size: 1.3rem;
+}
+
+/* form item size X large */
+.t-Form--xlarge .select2-container-multi .select2-choices {
+  font-size: 1.6rem;
+  padding: .9rem;
+  min-height: 4rem;
+}
+.t-Form--xlarge .select2-container-multi .select2-choices .select2-search-field {
+  font-size: 1.6rem;
+  padding-top: 2px;
+}
+.t-Form--xlarge .select2-container-multi .select2-choices .select2-search-choice {
+  padding: 3px 4px 3px 16px;
+  margin: 0 .7rem 0 0;
+  font-size: 1.5rem;
+}
+.t-Form--xlarge .select2-search-choice-close {
+  top: 2px;
+}
+
+/* item size large */
+.t-Form-fieldContainer--large .select2-container-multi .select2-choices {
+  font-size: 1.4rem;
+  padding: .7rem;
+  min-height: 3.2rem;
+}
+.t-Form-fieldContainer--large .select2-container-multi .select2-choices .select2-search-field {
+  font-size: 1.4rem;
+  margin-bottom: -1px;
+}
+.t-Form-fieldContainer--large .select2-container-multi .select2-choices .select2-search-choice {
+  margin: 0 .5rem 0 0;
+  font-size: 1.3rem;
+}
+
+/* item size X large */
+.t-Form-fieldContainer--xlarge .select2-container-multi .select2-choices {
+  font-size: 1.6rem;
+  padding: .9rem;
+  min-height: 4rem;
+}
+.t-Form-fieldContainer--xlarge .select2-container-multi .select2-choices .select2-search-field {
+  font-size: 1.6rem;
+  padding-top: 2px;
+}
+.t-Form-fieldContainer--xlarge .select2-container-multi .select2-choices .select2-search-choice {
+  padding: 3px 4px 3px 16px;
+  margin: 0 .7rem 0 0;
+  font-size: 1.5rem;
+}
+.t-Form-fieldContainer--xlarge .select2-search-choice-close {
+  top: 2px;
+}
+
+
+/* stretch item */
+.t-Form--stretchInputs .select2-container {
+  width: 100% !important;
+}
+.t-Form-fieldContainer--stretchInputs .select2-container {
+  width: 100% !important;
+}

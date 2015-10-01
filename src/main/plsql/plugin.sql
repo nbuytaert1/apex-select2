@@ -269,6 +269,7 @@ return apex_plugin.t_page_item_render_result is
   l_searching_msg            gt_string := p_plugin.attribute_04;
   l_null_optgroup_label_app  gt_string := p_plugin.attribute_05;
   l_loading_more_results_msg gt_string := p_plugin.attribute_06;
+  l_look_and_feel            gt_string := p_plugin.attribute_07;
 
   l_select_list_type        gt_string := p_item.attribute_01;
   l_min_results_for_search  gt_string := p_item.attribute_02;
@@ -578,6 +579,13 @@ begin
     p_directory => p_plugin.file_prefix,
     p_version   => null
   );
+  if (l_look_and_feel = 'UT') then
+    apex_css.add_file(
+      p_name      => 'select2-ut',
+      p_directory => p_plugin.file_prefix,
+      p_version   => null
+    );
+  end if;
 
   if (l_select_list_type = 'MULTI') then
     l_multiselect := 'multiple';
@@ -740,8 +748,14 @@ begin
 
   if (l_select_list_type = 'MULTI') then
     l_onload_code := l_onload_code || '
-        info_oracleapex_text_field("' || l_item_jq || '");';
-  end if;      
+      apex.jQuery("' || l_item_jq || '").each(function() {
+        apex.widget.initPageItem(this.id, {
+          setValue: function(pValue, pDisplayValue) {
+            apex.jQuery("#" + this.id).val(pValue.split("' || nvl(l_source_value_separator, ':') || '")).trigger("change");
+          }
+        });
+      });';
+  end if;
 
   apex_javascript.add_onload_code(l_onload_code);
   l_render_result.is_navigable := true;
