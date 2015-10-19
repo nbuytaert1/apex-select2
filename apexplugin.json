@@ -23,7 +23,7 @@
   "oracle" : {
     "versions" : ["11.2.0.1", "12.1.0.1"],
     "apex" : {
-      "versions" : ["4.1"],
+      "versions" : ["4.1.0"],
       "plugin" : {
         "internalName" : "BE.CTB.SELECT2",
         "type" : "item",
