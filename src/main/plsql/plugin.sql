@@ -15,19 +15,19 @@ gco_exact_case_sensitive       constant varchar2(3) := 'ECS';
 gco_starts_with_ignore_case    constant varchar2(3) := 'SIC';
 gco_starts_with_case_sensitive constant varchar2(3) := 'SCS';
 
-
 -- UTIL
 function add_js_attr(
            p_param_name     in gt_string,
            p_param_value    in gt_string,
            p_include_quotes in boolean default false,
-           p_include_comma  in boolean default true
+           p_include_comma  in boolean default true,
+           p_include_null_value in boolean default false 
          )
 return gt_string is
   l_param_value gt_string;
   l_attr        gt_string;
 begin
-  if (p_param_value is not null) then
+  if (p_param_value is not null or p_include_null_value) then
     if (p_include_quotes) then
       l_param_value := '"' || p_param_value || '"';
     end if;
@@ -269,6 +269,7 @@ return apex_plugin.t_page_item_render_result is
   l_searching_msg            gt_string := p_plugin.attribute_04;
   l_null_optgroup_label_app  gt_string := p_plugin.attribute_05;
   l_loading_more_results_msg gt_string := p_plugin.attribute_06;
+  l_look_and_feel            gt_string := p_plugin.attribute_07;
 
   l_select_list_type        gt_string := p_item.attribute_01;
   l_min_results_for_search  gt_string := p_item.attribute_02;
@@ -287,6 +288,7 @@ return apex_plugin.t_page_item_render_result is
   l_lazy_append_row_count   gt_string := p_item.attribute_15;
 
   l_display_values apex_application_global.vc_arr2;
+  l_filtered_ids   apex_application_global.vc_arr2;
   l_multiselect    gt_string;
 
   l_item_jq                    gt_string := apex_plugin_util.page_item_names_to_jquery(p_item.name);
@@ -339,7 +341,7 @@ return apex_plugin.t_page_item_render_result is
     l_code := '
       $("' || l_item_jq || '").select2({' ||
         add_js_attr('width', l_width, true) ||
-        add_js_attr('placeholder', nvl(l_placeholder, ' '), true) ||
+        add_js_attr('placeholder', l_placeholder, true,p_include_null_value=> true) ||
         add_js_attr('allowClear', 'true') ||
         add_js_attr('minimumInputLength', l_min_input_length) ||
         add_js_attr('maximumInputLength', l_max_input_length) ||
@@ -417,6 +419,18 @@ return apex_plugin.t_page_item_render_result is
     if (l_lazy_loading is not null) then
       if (p_value is not null) then
         l_selected_values := apex_util.string_to_table(p_value, nvl(l_source_value_separator, ':'));
+        
+        l_filtered_ids := apex_plugin_util.get_display_data(
+                              p_sql_statement     => p_item.lov_definition,
+                              p_min_columns       => gco_min_lov_cols,
+                              p_max_columns       => gco_max_lov_cols,
+                              p_component_name    => p_item.name,
+                              p_display_column_no => gco_lov_return_col,
+                              p_search_column_no  => gco_lov_return_col,
+                              p_search_value_list => l_selected_values,
+                              p_display_extra     => p_item.lov_display_extra
+                            );
+        
         l_display_values := apex_plugin_util.get_display_data(
                               p_sql_statement     => p_item.lov_definition,
                               p_min_columns       => gco_min_lov_cols,
@@ -424,16 +438,18 @@ return apex_plugin.t_page_item_render_result is
                               p_component_name    => p_item.name,
                               p_display_column_no => gco_lov_display_col,
                               p_search_column_no  => gco_lov_return_col,
-                              p_search_value_list => l_selected_values,
+                              p_search_value_list => l_filtered_ids,
                               p_display_extra     => p_item.lov_display_extra
                             );
 
-        for i in 1 .. l_selected_values.count loop
+        for i in 1 .. l_display_values.count loop
+          if l_display_values.exists(i) then
           l_json := l_json ||
             '{' ||
-               apex_javascript.add_attribute('R', sys.htf.escape_sc(l_selected_values(i)), false, true) ||
+                 apex_javascript.add_attribute('R', sys.htf.escape_sc(l_filtered_ids(i)), false, true) ||
                apex_javascript.add_attribute('D', sys.htf.escape_sc(l_display_values(i)), false, false) ||
             '},';
+           end if; 
         end loop;
 
         l_json := rtrim(l_json, ',');
@@ -561,7 +577,7 @@ begin
   apex_javascript.add_library(
     p_name      => 'select2.min',
     p_directory => p_plugin.file_prefix,
-    p_version   => null
+    p_version   => null    
   );
   apex_javascript.add_library(
     p_name      => 'select2-apex',
@@ -578,6 +594,13 @@ begin
     p_directory => p_plugin.file_prefix,
     p_version   => null
   );
+  if (l_look_and_feel = 'UT') then
+    apex_css.add_file(
+      p_name      => 'select2-ut',
+      p_directory => p_plugin.file_prefix,
+      p_version   => null
+    );
+  end if;
 
   if (l_select_list_type = 'MULTI') then
     l_multiselect := 'multiple';
@@ -686,11 +709,17 @@ begin
       l_onload_code := l_onload_code || '
           apex.server.plugin(
             "' || apex_plugin.get_ajax_identifier || '",
-            { pageItems: "' || l_items_for_session_state_jq || '" },
+            { '||case when l_lazy_loading is not null then 
+             ' x04: $v("' || ltrim(l_item_jq,'#') || '"), 
+               x06: "GETDATA",            
+              ' else 
+              ' x05: $v("' || ltrim(l_item_jq,'#') || '"),              
+              ' end||'  
+              pageItems: "' || l_items_for_session_state_jq || '" },
             { refreshObject: "' || l_item_jq || '",
               loadingIndicator: "' || l_item_jq || '",
               loadingIndicatorPosition: "after",';
-    if (l_select_list_type = 'TAG' and l_return_value_based_on = 'RETURN') then
+    if ((l_select_list_type = 'TAG' and l_return_value_based_on = 'RETURN') or l_lazy_loading is not null) then
       l_onload_code := l_onload_code || '
               dataType: "json",';
     else
@@ -720,13 +749,16 @@ begin
            ) || ',
         tags: tagsArray
       });';
+    elsif l_lazy_loading is not null then
+      l_onload_code := l_onload_code || '
+        item.select2("data", pData);}});';
     else
       l_onload_code := l_onload_code || '
       item.html(pData);';
-    end if;
-
+  
     l_onload_code := l_onload_code || '
-      item.select2("data", null);}});';
+      $s("' || ltrim(l_item_jq,'#') || '",$v("' || ltrim(l_item_jq,'#') || '"));}});';      
+    end if;
 
     if (p_item.ajax_optimize_refresh) then
       l_onload_code := l_onload_code || '}';
@@ -737,6 +769,12 @@ begin
 
   l_onload_code := l_onload_code || '
       beCtbSelect2.events.bind("' || l_item_jq || '");';
+
+  if (l_select_list_type = 'MULTI') then
+    l_onload_code := l_onload_code || '
+        info_oracleapex_text_field("' || l_item_jq || '",'||'"PLUGIN=' || apex_plugin.get_ajax_identifier||'","'||l_lazy_loading||'");';
+        
+  end if;
 
   apex_javascript.add_onload_code(l_onload_code);
   l_render_result.is_navigable := true;
@@ -764,8 +802,50 @@ return apex_plugin.t_page_item_ajax_result is
   l_more_rows_boolean        gt_string;
 
   l_result                   apex_plugin.t_page_item_ajax_result;
+  
+  procedure get_data_by_id(p_delimetered_id_list in varchar2)
+  is
+    v_display_values    apex_application_global.vc_arr2;
+    v_id_list           apex_application_global.vc_arr2;
+    v_filtered_id_list  apex_application_global.vc_arr2;
 begin
-  if (apex_application.g_x03 = 'LAZY_LOAD') then
+    v_id_list := apex_util.string_to_table(p_delimetered_id_list,nvl(p_item.attribute_13,':'));
+
+    v_filtered_id_list := APEX_PLUGIN_UTIL.GET_DISPLAY_DATA (
+         p_sql_statement     => p_item.lov_definition,
+         p_min_columns       => gco_min_lov_cols,
+         p_max_columns       => gco_max_lov_cols,
+         p_component_name    => p_item.name,         
+         p_display_column_no => gco_lov_return_col,
+         p_search_column_no  => gco_lov_return_col,
+         p_search_value_list => v_id_list,
+         p_display_extra     => p_item.lov_display_extra);
+
+    v_display_values := APEX_PLUGIN_UTIL.GET_DISPLAY_DATA (
+         p_sql_statement     => p_item.lov_definition,
+         p_min_columns       => gco_min_lov_cols,
+         p_max_columns       => gco_max_lov_cols,
+         p_component_name    => p_item.name,         
+         p_display_column_no => gco_lov_display_col,
+         p_search_column_no  => gco_lov_return_col,
+         p_search_value_list => v_filtered_id_list,
+         p_display_extra     => p_item.lov_display_extra);
+   l_json := '[';
+   for i in 1..v_display_values.count loop 
+        l_json := l_json ||
+          '{' ||
+             apex_javascript.add_attribute('R', sys.htf.escape_sc(v_filtered_id_list(i)), false, true) ||
+             apex_javascript.add_attribute('D', sys.htf.escape_sc(v_display_values(i)), false, false) ||
+          '},';
+   end loop;
+   l_json := rtrim(l_json,',')||']';
+  end get_data_by_id;  
+  
+begin
+  if apex_application.g_x06 = 'GETDATA' then
+      get_data_by_id(apex_application.g_x04);
+      sys.htp.p(l_json);
+  elsif (apex_application.g_x03 = 'LAZY_LOAD') then    
     l_search_string := nvl(apex_application.g_x01, '%');
     l_search_page := apex_application.g_x02;
     l_first_row := ((l_search_page - 1) * nvl(l_lazy_append_row_count, 0)) + 1;
@@ -833,7 +913,7 @@ begin
     if (l_select_list_type = 'TAG') then
       sys.htp.p(get_tags_option(p_item, false));
     else
-      sys.htp.p(get_options_html(p_item, p_plugin, ''));
+      sys.htp.p(get_options_html(p_item, p_plugin,apex_application.g_x05));            
     end if;
   end if;
 

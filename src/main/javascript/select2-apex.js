@@ -37,3 +37,27 @@ beCtbSelect2.events = {
     });
   }
 };
+
+function info_oracleapex_text_field(pSelector,request,isLazyLoading)
+{
+  // Register apex.item callbacks
+  apex.jQuery(pSelector).each(function(){
+    apex.widget.initPageItem(this.id, {
+      setValue      : function(pValue, pDisplayValue) {
+        if (pValue.length == 0) { 
+          $('#' + this.id).select2('data',null);
+        } else {
+          if(isLazyLoading) {
+             var ajaxRequest = new htmldb_Get(null, $v('pFlowId'),request, $v('pFlowStepId'));
+             ajaxRequest.addParam('x04',pValue);
+             ajaxRequest.addParam('x06','GETDATA');
+             var ajaxResult = JSON.parse(ajaxRequest.get());
+             $('#' + this.id).select2('data',ajaxResult);
+          } else {
+             $('#' + this.id).val(pValue.split(':'));
+          }
+        }
+      }
+    });
+  });
+}
