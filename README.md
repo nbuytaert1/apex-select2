@@ -5,7 +5,7 @@ Select lists in Oracle APEX as they should be
 
 ##About
 
-The Select2 APEX plugin is based on [Select2](http://ivaynberg.github.io/select2/index.html);
+The Select2 APEX plugin is based on [Select2](https://select2.github.io/);
 an open-source jQuery plugin that greatly improves the functionality and user-friendliness of regular select lists.
 In Oracle Application Express, it serves as a replacement for three pre-defined item types:
 
@@ -23,7 +23,7 @@ More information and downloads can be found [here](http://apex.oracle.com/pls/ap
 
 ##Current Stable Version
 
-Version 2.6.4
+Version 3.0.0
 
 ##Contributors
 * [Martin Giffy D'Souza](https://github.com/martindsouza)

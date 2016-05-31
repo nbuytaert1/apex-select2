@@ -5,35 +5,34 @@ beCtbSelect2.events = {
     var pageItem = $("" + pItem + "");
 
     pageItem.on("change", function(e) {
-      apex.jQuery(this).trigger("slctchange", {val:e.val, added:e.added, removed:e.removed});
+      apex.jQuery(this).trigger("slctchange", {select2: e});
       if ($.fn.jquery !== apex.jQuery.fn.jquery) {
         apex.jQuery(this).trigger("change");
       }
     });
-    pageItem.on("select2-opening", function(e) {
-      apex.jQuery(this).trigger("slctopening");
+    pageItem.on("select2:close", function(e) {
+      apex.jQuery(this).trigger("slctclose", {select2: e});
     });
-    pageItem.on("select2-open", function(e) {
-      apex.jQuery(this).trigger("slctopen");
+    pageItem.on("select2:closing", function(e) {
+      apex.jQuery(this).trigger("slctclosing", {select2: e});
     });
-    pageItem.on("select2-highlight", function(e) {
-      apex.jQuery(this).trigger("slcthighlight", {val:e.val, choice:e.choice});
+    pageItem.on("select2:open", function(e) {
+      apex.jQuery(this).trigger("slctopen", {select2: e});
     });
-    pageItem.on("select2-selecting", function(e) {
-      apex.jQuery(this).trigger("slctselecting", {val:e.val, choice:e.choice});
+    pageItem.on("select2:opening", function(e) {
+      apex.jQuery(this).trigger("slctopening", {select2: e});
     });
-    pageItem.on("select2-clearing", function(e) {
-      apex.jQuery(this).trigger("slctclearing");
+    pageItem.on("select2:select", function(e) {
+      apex.jQuery(this).trigger("slctselect", {select2: e});
     });
-    pageItem.on("select2-removed", function(e) {
-      apex.jQuery(this).trigger("slctremoved", {val:e.val, choice:e.choice});
+    pageItem.on("select2:selecting", function(e) {
+      apex.jQuery(this).trigger("slctselecting", {select2: e});
     });
-    pageItem.on("select2-focus", function(e) {
-      apex.jQuery(this).trigger("slctfocus");
+    pageItem.on("select2:unselect", function(e) {
+      apex.jQuery(this).trigger("slctunselect", {select2: e});
     });
-    pageItem.on("select2-blur", function(e) {
-      apex.jQuery(this).trigger("slctblur");
-      $(this).trigger("blur");
+    pageItem.on("select2:unselecting", function(e) {
+      apex.jQuery(this).trigger("slctunselecting", {select2: e});
     });
   }
 };

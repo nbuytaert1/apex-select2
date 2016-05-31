@@ -80,3 +80,6 @@ Changelog
 ####v2.6.4 - 01/10/2015
 * Universal Theme integration (select2-ut.css)
 * added support for the $s() function in multi-select mode
+
+####v3.0.0 - 31/05/2016
+* upgraded the Select2 library files to version 4.0.3 ([issue #33](https://github.com/nbuytaert1/apex-select2/issues/33))
