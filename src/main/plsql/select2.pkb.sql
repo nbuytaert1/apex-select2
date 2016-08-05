@@ -8,6 +8,7 @@ create or replace package body select2 is
   gco_lov_return_col constant number(1) := 2;
   gco_lov_group_col constant number(1) := 3;
   gco_contains_ignore_case constant char(3) := 'CIC';
+  gco_contains_ignore_case_diac constant char(4) := 'CICD';
   gco_contains_case_sensitive constant char(3) := 'CCS';
   gco_exact_ignore_case constant char(3) := 'EIC';
   gco_exact_case_sensitive constant char(3) := 'ECS';
@@ -361,6 +362,7 @@ create or replace package body select2 is
 
       if l_search_logic != gco_contains_ignore_case then
         case l_search_logic
+          when gco_contains_ignore_case_diac then l_search_logic := 'return text.toUpperCase().indexOf(term.toUpperCase()) >= 0;';
           when gco_contains_case_sensitive then l_search_logic := 'return text.indexOf(term) >= 0;';
           when gco_exact_ignore_case then l_search_logic := 'return text.toUpperCase() === term.toUpperCase() || term.length === 0;';
           when gco_exact_case_sensitive then l_search_logic := 'return text === term || term.length === 0;';
