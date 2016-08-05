@@ -238,6 +238,7 @@ create or replace package body select2 is
     l_null_optgroup_label_cmp gt_string := p_item.attribute_09;
     l_width gt_string := p_item.attribute_10;
     l_drag_and_drop_sorting gt_string := p_item.attribute_11;
+    l_token_separators gt_string := p_item.attribute_12;
     l_lazy_loading gt_string := p_item.attribute_14;
     l_lazy_append_row_count gt_string := p_item.attribute_15;
 
@@ -294,7 +295,8 @@ create or replace package body select2 is
           apex_javascript.add_attribute('minimumResultsForSearch', to_number(l_min_results_for_search)) ||
           apex_javascript.add_attribute('maximumSelectionLength', to_number(l_max_selection_size)) ||
           apex_javascript.add_attribute('closeOnSelect', l_rapid_selection_bool) ||
-          apex_javascript.add_attribute('selectOnClose', l_select_on_blur_bool);
+          apex_javascript.add_attribute('selectOnClose', l_select_on_blur_bool) ||
+          apex_javascript.add_attribute('tokenSeparators', l_token_separators);
 
       if l_look_and_feel in ('UT', 'SELECT2_CLASSIC') then
         l_code := l_code || apex_javascript.add_attribute('theme', 'classic');
