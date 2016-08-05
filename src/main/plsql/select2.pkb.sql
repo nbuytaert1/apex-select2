@@ -696,12 +696,21 @@ create or replace package body select2 is
 
       l_json := '{"row":[';
 
-      for i in 1 .. l_loop_count loop
-        l_json := l_json || '{' ||
-          apex_javascript.add_attribute('R', htf.escape_sc(l_lov(gco_lov_return_col)(i)), false, true) ||
-          apex_javascript.add_attribute('D', htf.escape_sc(l_lov(gco_lov_display_col)(i)), false, false) ||
-        '},';
-      end loop;
+      if p_item.escape_output then
+        for i in 1 .. l_loop_count loop
+          l_json := l_json || '{' ||
+            apex_javascript.add_attribute('R', htf.escape_sc(l_lov(gco_lov_return_col)(i)), false, true) ||
+            apex_javascript.add_attribute('D', htf.escape_sc(l_lov(gco_lov_display_col)(i)), false, false) ||
+          '},';
+        end loop;
+      else
+        for i in 1 .. l_loop_count loop
+          l_json := l_json || '{' ||
+            apex_javascript.add_attribute('R', l_lov(gco_lov_return_col)(i), false, true) ||
+            apex_javascript.add_attribute('D', l_lov(gco_lov_display_col)(i), false, false) ||
+          '},';
+        end loop;
+      end if;
 
       l_json := rtrim(l_json, ',');
 
