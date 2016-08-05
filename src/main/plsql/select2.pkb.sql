@@ -468,14 +468,19 @@ create or replace package body select2 is
     if (p_is_readonly or p_is_printer_friendly) then
       apex_plugin_util.print_hidden_if_readonly(p_item.name, p_value, p_is_readonly, p_is_printer_friendly);
 
-      l_display_values := apex_plugin_util.get_display_data(
-                            p_sql_statement => p_item.lov_definition,
-                            p_min_columns => gco_min_lov_cols,
-                            p_max_columns => gco_max_lov_cols,
-                            p_component_name => p_item.name,
-                            p_search_value_list => apex_util.string_to_table(p_value),
-                            p_display_extra => p_item.lov_display_extra
-                          );
+      begin
+        l_display_values := apex_plugin_util.get_display_data(
+                              p_sql_statement => p_item.lov_definition,
+                              p_min_columns => gco_min_lov_cols,
+                              p_max_columns => gco_max_lov_cols,
+                              p_component_name => p_item.name,
+                              p_search_value_list => apex_util.string_to_table(p_value),
+                              p_display_extra => p_item.lov_display_extra
+                            );
+      exception
+        when no_data_found then
+          null; -- https://github.com/nbuytaert1/apex-select2/issues/51
+      end;
 
       if l_display_values.count = 1 then
         apex_plugin_util.print_display_only(
