@@ -227,6 +227,8 @@ create or replace package body select2 is
     l_look_and_feel gt_string := p_plugin.attribute_07;
     l_error_loading_msg gt_string := p_plugin.attribute_08;
     l_input_too_long_msg gt_string := p_plugin.attribute_09;
+    l_custom_css_path gt_string := p_plugin.attribute_10;
+    l_custom_css_filename gt_string := p_plugin.attribute_11;
 
     l_select_list_type gt_string := p_item.attribute_01;
     l_min_results_for_search gt_string := p_item.attribute_02;
@@ -531,6 +533,12 @@ create or replace package body select2 is
       apex_css.add_file(
         p_name => 'select2-ut',
         p_directory => p_plugin.file_prefix,
+        p_version => null
+      );
+    elsif l_look_and_feel = 'CUSTOM' then
+      apex_css.add_file(
+        p_name => apex_plugin_util.replace_substitutions(l_custom_css_filename),
+        p_directory => apex_plugin_util.replace_substitutions(l_custom_css_path),
         p_version => null
       );
     end if;
