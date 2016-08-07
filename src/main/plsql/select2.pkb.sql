@@ -413,7 +413,8 @@ create or replace package body select2 is
                               };
                             },
             cache: true
-          },';
+          },
+          escapeMarkup: function(markup) { return markup; },';
       end if;
 
       if l_select_list_type = 'TAG' then
