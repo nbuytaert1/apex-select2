@@ -83,3 +83,10 @@ Changelog
 
 ####v3.0.0 - 31/05/2016
 * upgraded the Select2 library files to version 4.0.3 ([issue #33](https://github.com/nbuytaert1/apex-select2/issues/33))
+
+####v3.0.1 - 07/08/2016
+* [issue #42](https://github.com/nbuytaert1/apex-select2/issues/42): extra search logic option – with diacritics
+* [issue #51](https://github.com/nbuytaert1/apex-select2/issues/51): prevent a NO_DATA_FOUND error when in read only mode
+* [issue #55](https://github.com/nbuytaert1/apex-select2/issues/55): allow for a custom CSS file
+* [issue #61](https://github.com/nbuytaert1/apex-select2/issues/61): added automatic tokenization
+* [issue #64](https://github.com/nbuytaert1/apex-select2/issues/64): escape special characters when lazy loading is enabled
