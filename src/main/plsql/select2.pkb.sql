@@ -388,7 +388,7 @@ create or replace package body select2 is
             url: "wwv_flow.show",
             type: "POST",
             dataType: "json",
-            delay: 250,
+            delay: 400,
             data: function(params) {
                     return {
                       p_flow_id: $("#pFlowId").val(),
