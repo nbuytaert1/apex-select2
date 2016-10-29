@@ -14,6 +14,7 @@ create or replace package body select2 is
   gco_exact_case_sensitive constant char(3) := 'ECS';
   gco_starts_with_ignore_case constant char(3) := 'SIC';
   gco_starts_with_case_sensitive constant char(3) := 'SCS';
+  gco_multi_word constant char(2) := 'MW';
 
 
   procedure print_lov_options(
@@ -370,6 +371,9 @@ create or replace package body select2 is
           when gco_exact_case_sensitive then l_search_logic := 'return text === term || term.length === 0;';
           when gco_starts_with_ignore_case then l_search_logic := 'return text.toUpperCase().indexOf(term.toUpperCase()) === 0;';
           when gco_starts_with_case_sensitive then l_search_logic := 'return text.indexOf(term) === 0;';
+          when gco_multi_word then l_search_logic := '
+            var escpTerm = term.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+            return new RegExp(escpTerm.replace(/ /g, ".*"), "i").test(text);';
           else l_search_logic := 'return text.toUpperCase().indexOf(term.toUpperCase()) >= 0;';
         end case;
 
@@ -536,6 +540,12 @@ create or replace package body select2 is
         p_directory => p_plugin.file_prefix,
         p_version => null
       );
+    elsif l_look_and_feel = 'SELECT2_CLASSIC' then
+      apex_css.add_file(
+        p_name => 'select2-classic',
+        p_directory => p_plugin.file_prefix,
+        p_version => null
+      );
     elsif l_look_and_feel = 'CUSTOM' then
       apex_css.add_file(
         p_name => apex_plugin_util.replace_substitutions(l_custom_css_filename),
@@ -690,6 +700,10 @@ create or replace package body select2 is
         else
           l_apex_plugin_search_logic := apex_plugin_util.c_search_like_ignore; -- uses LIKE %VALUE% with UPPER
       end case;
+
+      if l_search_logic = gco_multi_word then
+        l_search_string := replace(l_search_string, ' ', '%');
+      end if;
 
       l_lov := apex_plugin_util.get_data(
                  p_sql_statement => p_item.lov_definition,
