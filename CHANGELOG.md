@@ -90,3 +90,9 @@ Changelog
 * [issue #55](https://github.com/nbuytaert1/apex-select2/issues/55): allow for a custom CSS file
 * [issue #61](https://github.com/nbuytaert1/apex-select2/issues/61): added automatic tokenization
 * [issue #64](https://github.com/nbuytaert1/apex-select2/issues/64): escape special characters when lazy loading is enabled
+
+####v3.0.2 - 03/11/2016
+* [issue #63](https://github.com/nbuytaert1/apex-select2/issues/63): increase the delay AJAX parameter from 250 to 400 ms
+* [issue #65](https://github.com/nbuytaert1/apex-select2/issues/65): fix cut off null display values
+* [issue #66](https://github.com/nbuytaert1/apex-select2/issues/66): dropped UT look and feel
+* [issue #67](https://github.com/nbuytaert1/apex-select2/issues/67): introduced multi-word search algorithm

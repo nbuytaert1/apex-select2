@@ -302,7 +302,7 @@ create or replace package body select2 is
           apex_javascript.add_attribute('selectOnClose', l_select_on_blur_bool) ||
           apex_javascript.add_attribute('tokenSeparators', l_token_separators);
 
-      if l_look_and_feel in ('UT', 'SELECT2_CLASSIC') then
+      if l_look_and_feel = 'SELECT2_CLASSIC' then
         l_code := l_code || apex_javascript.add_attribute('theme', 'classic');
       end if;
 
@@ -534,13 +534,7 @@ create or replace package body select2 is
       p_directory => p_plugin.file_prefix,
       p_version => null
     );
-    if l_look_and_feel = 'UT' then
-      apex_css.add_file(
-        p_name => 'select2-ut',
-        p_directory => p_plugin.file_prefix,
-        p_version => null
-      );
-    elsif l_look_and_feel = 'SELECT2_CLASSIC' then
+    if l_look_and_feel = 'SELECT2_CLASSIC' then
       apex_css.add_file(
         p_name => 'select2-classic',
         p_directory => p_plugin.file_prefix,
