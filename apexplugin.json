@@ -12,7 +12,9 @@
   "author" : {
     "name" : "Nick Buytaert",
     "email" : "nbuytaert1@gmail.com",
-    "url" : "https://apexplained.wordpress.com/"
+    "url" : "https://apexplained.wordpress.com/",
+    "twitter": "nbuytaert1",
+    "donationUrl": "https://www.paypal.me/NickBuytaert/3"
   },
   "repository" : {
     "type" : "git",
