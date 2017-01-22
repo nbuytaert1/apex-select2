@@ -1,0 +1,31 @@
+.select2-container
+{
+	max-width: 100%;
+}
+li.select2-selection__choice
+{
+	max-width: 100%;
+	overflow-x: hidden;
+	text-overflow: ellipsis;
+	
+}
+li.select2-selection__choice .select2-selection__choice__remove
+{
+	display: inline;
+}
+.select2-apex-nowrap>.select2-selection__rendered
+{
+	white-space: nowrap !important;
+}
+.select2-apex-wrapws>.select2-selection__rendered,.select2-apex-wrapwsorwo>.select2-selection__rendered,.select2-apex-wrapwsandwo>.select2-selection__rendered
+{
+	white-space: normal !important;
+}
+.select2-apex-wrapwsorwo>.select2-selection__rendered
+{
+	word-wrap: break-word;
+}
+.select2-apex-wrapwsandwo>.select2-selection__rendered
+{
+	word-break: break-all;
+}
