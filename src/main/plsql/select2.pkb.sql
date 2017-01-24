@@ -233,18 +233,17 @@ function render(
 
   l_select_list_type gt_string := p_item.attribute_01;
   l_min_results_for_search gt_string := p_item.attribute_02;
-  l_min_input_length gt_string := p_item.attribute_03;
-  l_max_input_length gt_string := p_item.attribute_04;
+  l_custom_options gt_string := p_item.attribute_03;
+
   l_max_selection_size gt_string := p_item.attribute_05;
   l_rapid_selection gt_string := p_item.attribute_06;
-  l_select_on_blur gt_string := p_item.attribute_07;
+  
   l_search_logic gt_string := p_item.attribute_08;
   l_null_optgroup_label_cmp gt_string := p_item.attribute_09;
-	
   l_width gt_string := p_item.attribute_10;
   l_drag_and_drop_sorting gt_string := p_item.attribute_11;
   l_token_separators gt_string := p_item.attribute_12;
-  l_text_wrap gt_string := p_item.attribute_13; 
+  l_text_wrap gt_string := p_item.attribute_13;
   l_lazy_loading gt_string := p_item.attribute_14;
   l_lazy_append_row_count gt_string := p_item.attribute_15;
 
@@ -269,11 +268,9 @@ function render(
     l_display_values apex_application_global.vc_arr2;
     l_json gt_string;
     l_code gt_string;
-    l_language varchar2(32767) ;
+    l_language varchar2(32767);
     l_allow_clear_bool boolean;
     l_rapid_selection_bool boolean;
-    l_select_on_blur_bool boolean;
-    
   begin
     if p_item.lov_display_null then
       l_allow_clear_bool := true;
@@ -287,31 +284,23 @@ function render(
       l_rapid_selection_bool := false;
     end if;
 
-    if l_select_on_blur is null then
-      l_select_on_blur_bool := false;
-    else
-      l_select_on_blur_bool := true;
-    end if;
-
     l_code := '
       $("' || l_item_jq || '").select2({' ||
         apex_javascript.add_attribute('placeholder', p_item.lov_null_text, false) ||
         apex_javascript.add_attribute('allowClear', l_allow_clear_bool) ||
-        apex_javascript.add_attribute('minimumInputLength', to_number(l_min_input_length)) ||
-        apex_javascript.add_attribute('maximumInputLength', to_number(l_max_input_length)) ||
+        case when l_custom_options is not null then l_custom_options||','else null end||
         apex_javascript.add_attribute('minimumResultsForSearch', to_number(l_min_results_for_search)) ||
         apex_javascript.add_attribute('maximumSelectionLength', to_number(l_max_selection_size)) ||
         apex_javascript.add_attribute('closeOnSelect', l_rapid_selection_bool) ||
-        apex_javascript.add_attribute('selectOnClose', l_select_on_blur_bool) ||
         apex_javascript.add_attribute('tokenSeparators', l_token_separators)||
         apex_javascript.add_attribute('dropdownAutoWidth', true)||
         apex_javascript.add_attribute('containerCssClass', 'select2-apex-'||lower(l_text_wrap));
+
     if l_look_and_feel = 'SELECT2_CLASSIC' then
       l_code := l_code || apex_javascript.add_attribute('theme', 'classic');
     end if;
 
     
-
     if l_error_loading_msg is not null then
       l_language := l_language || '
         "errorLoading": function() {
@@ -358,19 +347,18 @@ function render(
                        return "' || l_no_matches_msg || '";
                      },';
     end if;
-    
     if l_searching_msg is not null then
       l_language := l_language || '
         "searching": function() {
                        return "' || l_searching_msg || '";
                      },';
     end if;
+
     if l_language is not null then
-        l_code := l_code || 'language: ';
-        l_language :='{'||rtrim(l_language, ',')||'}';
-        l_code := l_code||l_language || ',';
+      l_code := l_code || 'language: ';
+      l_language :='{'||rtrim(l_language, ',')||'}';
+      l_code := l_code||l_language || ',';
     end if;
-    
 
     if l_search_logic != gco_contains_ignore_case then
       case l_search_logic
@@ -527,15 +515,14 @@ begin
 
     return l_render_result;
   end if;
-
-
+  
   apex_css.add( p_css => '.select2-search__field{min-width:'||length(p_item.lov_null_text)||'ch;}' );
-	
+  
   apex_javascript.add_library(
     p_name => substr(:BROWSER_LANGUAGE,1,2),
     p_directory => p_plugin.file_prefix||'i18n/',
     p_version => null
-  );
+  );  
 
   if l_look_and_feel = 'SELECT2_CLASSIC' then
     apex_css.add_file(
@@ -555,11 +542,12 @@ begin
     l_multiselect := 'multiple="multiple"';
   end if;
 
-  htp.p('      
+  htp.p('
     <select ' || l_multiselect || '
       id="' || p_item.name || '"
-      name="' || apex_plugin.get_input_name_for_page_item(true) || '"'
-      ||p_item.element_attributes || 'class="selectlist'|| p_item.element_css_classes || '">');
+      name="' || apex_plugin.get_input_name_for_page_item(true) || '"
+      class="selectlist ' || p_item.element_css_classes || '"' ||
+      p_item.element_attributes || '>');
 
   if (l_select_list_type = 'SINGLE' and p_item.lov_display_null) then
     apex_plugin_util.print_option(
@@ -578,23 +566,12 @@ begin
   l_onload_code := get_select2_constructor;
 
   if l_drag_and_drop_sorting is not null then
-    select substr(version_no, 1, 3)
-    into l_apex_version
-    from apex_release;
+    apex_javascript.add_library(
+      p_name => 'jquery.ui.sortable.min',
+      p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.10.4/ui/minified/',
+      p_version => null
+    );
 
-    if l_apex_version = '4.2' then
-      apex_javascript.add_library(
-        p_name => 'jquery.ui.sortable.min',
-        p_directory => '#JQUERYUI_DIRECTORY#ui/minified/',
-        p_version => null
-      );
-    else
-      apex_javascript.add_library(
-        p_name => 'jquery.ui.sortable.min',
-        p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.10.4/ui/minified/',
-        p_version => null
-      );
-    end if;
 
     l_onload_code := l_onload_code || get_sortable_constructor();
   end if;
