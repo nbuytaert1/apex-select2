@@ -243,6 +243,7 @@ create or replace package body select2 is
     l_width gt_string := p_item.attribute_10;
     l_drag_and_drop_sorting gt_string := p_item.attribute_11;
     l_token_separators gt_string := p_item.attribute_12;
+    l_extra_options gt_string := p_item.attribute_13;
     l_lazy_loading gt_string := p_item.attribute_14;
     l_lazy_append_row_count gt_string := p_item.attribute_15;
 
@@ -290,6 +291,13 @@ create or replace package body select2 is
         l_select_on_blur_bool := true;
       end if;
 
+      -- make sure the last character of l_extra_options is a comma
+      if trim(l_extra_options) is not null then
+        if substr(trim(l_extra_options), -1, 1) != ',' then
+          l_extra_options := l_extra_options || ',';
+        end if;
+      end if;
+
       l_code := '
         $("' || l_item_jq || '").select2({' ||
           apex_javascript.add_attribute('placeholder', p_item.lov_null_text, false) ||
@@ -300,7 +308,8 @@ create or replace package body select2 is
           apex_javascript.add_attribute('maximumSelectionLength', to_number(l_max_selection_size)) ||
           apex_javascript.add_attribute('closeOnSelect', l_rapid_selection_bool) ||
           apex_javascript.add_attribute('selectOnClose', l_select_on_blur_bool) ||
-          apex_javascript.add_attribute('tokenSeparators', l_token_separators);
+          apex_javascript.add_attribute('tokenSeparators', l_token_separators) ||
+          l_extra_options;
 
       if l_look_and_feel = 'SELECT2_CLASSIC' then
         l_code := l_code || apex_javascript.add_attribute('theme', 'classic');
@@ -432,6 +441,15 @@ create or replace package body select2 is
         l_code := l_code || '});';
       else
         l_code := l_code || ';';
+      end if;
+
+      -- issue #71: fix focus after selection for single-value items
+      if l_select_list_type = 'SINGLE' then
+        l_code := l_code || '
+          $("' || l_item_jq || '").on(
+            "select2:select",
+            function(){ $(this).focus(); }
+          );';
       end if;
 
       return l_code;

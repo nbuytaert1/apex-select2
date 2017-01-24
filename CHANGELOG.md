@@ -96,3 +96,7 @@ Changelog
 * [issue #65](https://github.com/nbuytaert1/apex-select2/issues/65): fix cut off null display values
 * [issue #66](https://github.com/nbuytaert1/apex-select2/issues/66): dropped UT look and feel
 * [issue #67](https://github.com/nbuytaert1/apex-select2/issues/67): introduced multi-word search algorithm
+
+####v3.0.3 - 24/01/2017
+* [issue #71](https://github.com/nbuytaert1/apex-select2/issues/71): Focus after selection - keyboard navigation broken
+* [issue #72](https://github.com/nbuytaert1/apex-select2/issues/72): Select2 v3 doesn't work on modal pages in APEX 5.1

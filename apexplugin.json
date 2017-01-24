@@ -1,6 +1,6 @@
 {
   "name" : "Select2",
-  "version" : "3.0.2",
+  "version" : "3.0.3",
   "description" : "Select lists in Oracle APEX as they should be.",
   "keywords" : ["select list", "jquery", "multi-select", "search", "cascading LOV", "tagging", "autocomplete", "typeahead", "dropdown", "lazy-loading", "lazy-appending", "infinite scroll", "AJAX"],
   "homepage" : "https://github.com/nbuytaert1/apex-select2",
