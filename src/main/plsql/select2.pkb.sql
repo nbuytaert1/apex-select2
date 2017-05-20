@@ -766,6 +766,7 @@ create or replace package body select2 is
 
       l_json := l_json || '],' || apex_javascript.add_attribute('more', l_more_rows_boolean, true, false) || '}';
 
+      owa_util.mime_header('application/json', true);
       htp.p(l_json);
     else
       print_lov_options(p_item, p_plugin);
