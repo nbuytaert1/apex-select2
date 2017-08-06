@@ -212,13 +212,12 @@ create or replace package body select2 is
   end print_lov_options;
 
 
-  function render(
-             p_item in apex_plugin.t_page_item,
-             p_plugin in apex_plugin.t_plugin,
-             p_value in gt_string,
-             p_is_readonly in boolean,
-             p_is_printer_friendly in boolean
-           ) return apex_plugin.t_page_item_render_result is
+  procedure render(
+    p_item in apex_plugin.t_item,
+    p_plugin in apex_plugin.t_plugin,
+    p_param in apex_plugin.t_item_render_param,
+    p_result in out nocopy apex_plugin.t_item_render_result
+  ) is
     l_no_matches_msg gt_string := p_plugin.attribute_01;
     l_input_too_short_msg gt_string := p_plugin.attribute_02;
     l_selection_too_big_msg gt_string := p_plugin.attribute_03;
@@ -310,6 +309,11 @@ create or replace package body select2 is
           apex_javascript.add_attribute('selectOnClose', l_select_on_blur_bool) ||
           apex_javascript.add_attribute('tokenSeparators', l_token_separators) ||
           l_extra_options;
+
+      -- add dropdownParent setting for IG columns
+      if substr(l_item_jq, 2, 1) != 'P' then
+        l_code := l_code || 'dropdownParent: $("' || l_item_jq || '").parent(),';
+      end if;
 
       if l_look_and_feel = 'SELECT2_CLASSIC' then
         l_code := l_code || apex_javascript.add_attribute('theme', 'classic');
@@ -489,11 +493,11 @@ create or replace package body select2 is
     end get_sortable_constructor;
   begin
     if apex_application.g_debug then
-      apex_plugin_util.debug_page_item(p_plugin, p_item, p_value, p_is_readonly, p_is_printer_friendly);
+      apex_plugin_util.debug_page_item(p_plugin, p_item, p_param.value, p_param.is_readonly, p_param.is_printer_friendly);
     end if;
 
-    if (p_is_readonly or p_is_printer_friendly) then
-      apex_plugin_util.print_hidden_if_readonly(p_item.name, p_value, p_is_readonly, p_is_printer_friendly);
+    if p_param.is_readonly or p_param.is_printer_friendly then
+      apex_plugin_util.print_hidden_if_readonly(p_item.name, p_param.value, p_param.is_readonly, p_param.is_printer_friendly);
 
       begin
         l_display_values := apex_plugin_util.get_display_data(
@@ -501,12 +505,12 @@ create or replace package body select2 is
                               p_min_columns => gco_min_lov_cols,
                               p_max_columns => gco_max_lov_cols,
                               p_component_name => p_item.name,
-                              p_search_value_list => apex_util.string_to_table(p_value),
+                              p_search_value_list => apex_util.string_to_table(p_param.value),
                               p_display_extra => p_item.lov_display_extra
                             );
       exception
         when no_data_found then
-          null; -- https://github.com/nbuytaert1/apex-select2/issues/51
+          null; -- issue #51
       end;
 
       if l_display_values.count = 1 then
@@ -533,149 +537,151 @@ create or replace package body select2 is
 
         htp.p('</ul>');
       end if;
-
-      return l_render_result;
-    end if;
-
-    apex_javascript.add_library(
-      p_name => 'select2.full.min',
-      p_directory => p_plugin.file_prefix,
-      p_version => null
-    );
-    apex_javascript.add_library(
-      p_name => 'select2-apex',
-      p_directory => p_plugin.file_prefix,
-      p_version => null
-    );
-    apex_css.add_file(
-      p_name => 'select2.min',
-      p_directory => p_plugin.file_prefix,
-      p_version => null
-    );
-    if l_look_and_feel = 'SELECT2_CLASSIC' then
-      apex_css.add_file(
-        p_name => 'select2-classic',
+    else
+      apex_javascript.add_library(
+        p_name => 'select2.full.min',
         p_directory => p_plugin.file_prefix,
         p_version => null
       );
-    elsif l_look_and_feel = 'CUSTOM' then
-      apex_css.add_file(
-        p_name => apex_plugin_util.replace_substitutions(l_custom_css_filename),
-        p_directory => apex_plugin_util.replace_substitutions(l_custom_css_path),
+      apex_javascript.add_library(
+        p_name => 'select2-apex',
+        p_directory => p_plugin.file_prefix,
         p_version => null
       );
-    end if;
-
-    if l_select_list_type in ('MULTI', 'TAG') then
-      l_multiselect := 'multiple="multiple"';
-    end if;
-
-    htp.p('
-      <select ' || l_multiselect || '
-        id="' || p_item.name || '"
-        name="' || apex_plugin.get_input_name_for_page_item(true) || '"
-        class="selectlist ' || p_item.element_css_classes || '"' ||
-        p_item.element_attributes || '>');
-
-    if (l_select_list_type = 'SINGLE' and p_item.lov_display_null) then
-      apex_plugin_util.print_option(
-        p_display_value => p_item.lov_null_text,
-        p_return_value => p_item.lov_null_value,
-        p_is_selected => false,
-        p_attributes => p_item.element_option_attributes,
-        p_escape => p_item.escape_output
+      apex_css.add_file(
+        p_name => 'select2.min',
+        p_directory => p_plugin.file_prefix,
+        p_version => null
       );
-    end if;
-
-    print_lov_options(p_item, p_plugin, p_value);
-
-    htp.p('</select>');
-
-    l_onload_code := get_select2_constructor;
-
-    if l_drag_and_drop_sorting is not null then
-      select substr(version_no, 1, 3)
-      into l_apex_version
-      from apex_release;
-
-      if l_apex_version = '4.2' then
-        apex_javascript.add_library(
-          p_name => 'jquery.ui.sortable.min',
-          p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.8.22/ui/minified/',
+      if l_look_and_feel = 'SELECT2_CLASSIC' then
+        apex_css.add_file(
+          p_name => 'select2-classic',
+          p_directory => p_plugin.file_prefix,
           p_version => null
         );
-      else
-        apex_javascript.add_library(
-          p_name => 'jquery.ui.sortable.min',
-          p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.10.4/ui/minified/',
+      elsif l_look_and_feel = 'CUSTOM' then
+        apex_css.add_file(
+          p_name => apex_plugin_util.replace_substitutions(l_custom_css_filename),
+          p_directory => apex_plugin_util.replace_substitutions(l_custom_css_path),
           p_version => null
         );
       end if;
 
-      l_onload_code := l_onload_code || get_sortable_constructor();
-    end if;
-
-    if p_item.lov_cascade_parent_items is not null then
-      l_items_for_session_state_jq := l_cascade_parent_items_jq;
-
-      if l_cascade_items_to_submit_jq is not null then
-        l_items_for_session_state_jq := l_items_for_session_state_jq || ',' || l_cascade_items_to_submit_jq;
+      if l_select_list_type in ('MULTI', 'TAG') then
+        l_multiselect := 'multiple="multiple"';
       end if;
 
-      l_onload_code := l_onload_code || '
-        $("' || l_cascade_parent_items_jq || '").on("change", function(e) {';
+      htp.p('
+        <select ' || l_multiselect || '
+          id="' || p_item.name || '"
+          name="' || apex_plugin.get_input_name_for_page_item(true) || '"
+          class="selectlist ' || p_item.element_css_classes || '"' ||
+          p_item.element_attributes || '>');
 
-      if p_item.ajax_optimize_refresh then
-        l_cascade_parent_items := apex_util.string_to_table(l_cascade_parent_items_jq, ',');
+      if (l_select_list_type = 'SINGLE' and p_item.lov_display_null) then
+        apex_plugin_util.print_option(
+          p_display_value => p_item.lov_null_text,
+          p_return_value => p_item.lov_null_value,
+          p_is_selected => false,
+          p_attributes => p_item.element_option_attributes,
+          p_escape => p_item.escape_output
+        );
+      end if;
 
-        l_optimize_refresh_condition := '$("' || l_cascade_parent_items(1) || '").val() === ""';
+      print_lov_options(p_item, p_plugin, p_param.value);
 
-        for i in 2 .. l_cascade_parent_items.count loop
-          l_optimize_refresh_condition := l_optimize_refresh_condition || ' || $("' || l_cascade_parent_items(i) || '").val() === ""';
-        end loop;
+      htp.p('</select>');
+
+      l_onload_code := get_select2_constructor;
+
+      if l_drag_and_drop_sorting is not null then
+        select substr(version_no, 1, 3)
+        into l_apex_version
+        from apex_release;
+
+        if l_apex_version = '4.2' then
+          apex_javascript.add_library(
+            p_name => 'jquery.ui.sortable.min',
+            p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.8.22/ui/minified/',
+            p_version => null
+          );
+        else
+          apex_javascript.add_library(
+            p_name => 'jquery.ui.sortable.min',
+            p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.10.4/ui/minified/',
+            p_version => null
+          );
+        end if;
+
+        l_onload_code := l_onload_code || get_sortable_constructor();
+      end if;
+
+      if p_item.lov_cascade_parent_items is not null then
+        l_items_for_session_state_jq := l_cascade_parent_items_jq;
+
+        if l_cascade_items_to_submit_jq is not null then
+          l_items_for_session_state_jq := l_items_for_session_state_jq || ',' || l_cascade_items_to_submit_jq;
+        end if;
 
         l_onload_code := l_onload_code || '
-          var item = $("' || l_item_jq || '");
-          if (' || l_optimize_refresh_condition || ') {
-            item.val("").trigger("change");
-          } else {';
+          $("' || l_cascade_parent_items_jq || '").on("change", function(e) {';
+
+        if p_item.ajax_optimize_refresh then
+          l_cascade_parent_items := apex_util.string_to_table(l_cascade_parent_items_jq, ',');
+
+          l_optimize_refresh_condition := '$("' || l_cascade_parent_items(1) || '").val() === ""';
+
+          for i in 2 .. l_cascade_parent_items.count loop
+            l_optimize_refresh_condition := l_optimize_refresh_condition || ' || $("' || l_cascade_parent_items(i) || '").val() === ""';
+          end loop;
+
+          l_onload_code := l_onload_code || '
+            var item = $("' || l_item_jq || '");
+            if (' || l_optimize_refresh_condition || ') {
+              item.val("").trigger("change");
+            } else {';
+        end if;
+
+        l_onload_code := l_onload_code || '
+              apex.server.plugin(
+                "' || apex_plugin.get_ajax_identifier || '",
+                { pageItems: "' || l_items_for_session_state_jq || '" },
+                { refreshObject: "' || l_item_jq || '",
+                  loadingIndicator: "' || l_item_jq || '",
+                  loadingIndicatorPosition: "after",
+                  dataType: "text",
+                  success: function(pData) {
+                             var item = $("' || l_item_jq || '");
+                             item.html(pData);
+                             item.val("").trigger("change");
+                           }
+                });';
+
+        if p_item.ajax_optimize_refresh then
+          l_onload_code := l_onload_code || '}';
+        end if;
+
+        l_onload_code := l_onload_code || '});';
       end if;
 
       l_onload_code := l_onload_code || '
-            apex.server.plugin(
-              "' || apex_plugin.get_ajax_identifier || '",
-              { pageItems: "' || l_items_for_session_state_jq || '" },
-              { refreshObject: "' || l_item_jq || '",
-                loadingIndicator: "' || l_item_jq || '",
-                loadingIndicatorPosition: "after",
-                dataType: "text",
-                success: function(pData) {
-                           var item = $("' || l_item_jq || '");
-                           item.html(pData);
-                           item.val("").trigger("change");
-                         }
-              });';
+          beCtbSelect2.events.bind("' || l_item_jq || '");';
 
-      if p_item.ajax_optimize_refresh then
-        l_onload_code := l_onload_code || '}';
-      end if;
-
-      l_onload_code := l_onload_code || '});';
+      apex_javascript.add_onload_code(l_onload_code);
+      l_render_result.is_navigable := true;
     end if;
 
-    l_onload_code := l_onload_code || '
-        beCtbSelect2.events.bind("' || l_item_jq || '");';
-
-    apex_javascript.add_onload_code(l_onload_code);
-    l_render_result.is_navigable := true;
-    return l_render_result;
+    p_result := l_render_result;
   end render;
 
-
-  function ajax(
-             p_item in apex_plugin.t_page_item,
-             p_plugin in apex_plugin.t_plugin
-           ) return apex_plugin.t_page_item_ajax_result is
+  -- https://community.oracle.com/message/14242489
+  -- this is actually the AJAX procedure
+  procedure render(
+    p_item in apex_plugin.t_item,
+    p_plugin in apex_plugin.t_plugin,
+    p_param in apex_plugin.t_item_ajax_param,
+    p_result in out nocopy apex_plugin.t_item_ajax_result
+  ) is
     l_select_list_type gt_string := p_item.attribute_01;
     l_search_logic gt_string := p_item.attribute_08;
     l_lazy_append_row_count gt_string := p_item.attribute_15;
@@ -715,6 +721,11 @@ create or replace package body select2 is
 
       if l_search_logic = gco_multi_word then
         l_search_string := replace(l_search_string, ' ', '%');
+      end if;
+
+      -- issue #78
+      if l_search_logic = gco_contains_ignore_case then
+        l_search_string := convert(l_search_string, 'US7ASCII');
       end if;
 
       l_lov := apex_plugin_util.get_data(
@@ -766,13 +777,19 @@ create or replace package body select2 is
 
       l_json := l_json || '],' || apex_javascript.add_attribute('more', l_more_rows_boolean, true, false) || '}';
 
-      owa_util.mime_header('application/json', true);
+      -- issue #79
+      owa_util.mime_header(
+        ccontent_type => 'application/json',
+        bclose_header => true,
+        ccharset => 'UTF-8'
+      );
+
       htp.p(l_json);
     else
       print_lov_options(p_item, p_plugin);
     end if;
 
-    return l_result;
-  end ajax;
+    p_result := l_result;
+  end render;
 
 end select2;
