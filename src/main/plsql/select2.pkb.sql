@@ -310,7 +310,7 @@ create or replace package body select2 is
           apex_javascript.add_attribute('tokenSeparators', l_token_separators) ||
           l_extra_options;
 
-      -- add dropdownParent setting for IG columns
+      -- add dropdownParent option for IG columns
       if substr(l_item_jq, 2, 1) != 'P' then
         l_code := l_code || 'dropdownParent: $("' || l_item_jq || '").parent(),';
       end if;
@@ -538,21 +538,6 @@ create or replace package body select2 is
         htp.p('</ul>');
       end if;
     else
-      apex_javascript.add_library(
-        p_name => 'select2.full.min',
-        p_directory => p_plugin.file_prefix,
-        p_version => null
-      );
-      apex_javascript.add_library(
-        p_name => 'select2-apex',
-        p_directory => p_plugin.file_prefix,
-        p_version => null
-      );
-      apex_css.add_file(
-        p_name => 'select2.min',
-        p_directory => p_plugin.file_prefix,
-        p_version => null
-      );
       if l_look_and_feel = 'SELECT2_CLASSIC' then
         apex_css.add_file(
           p_name => 'select2-classic',

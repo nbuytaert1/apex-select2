@@ -99,3 +99,9 @@
 #### v3.0.3 - 24/01/2017
 * [issue #71](https://github.com/nbuytaert1/apex-select2/issues/71): Focus after selection - keyboard navigation broken
 * [issue #72](https://github.com/nbuytaert1/apex-select2/issues/72): Select2 v3 doesn't work on modal pages in APEX 5.1
+
+#### v3.1.0 - 07/08/2017
+* [issue #73](https://github.com/nbuytaert1/apex-select2/issues/73): Interactive Grid support
+* [issue #74](https://github.com/nbuytaert1/apex-select2/issues/74): Switch to "File URLs to Load"
+* [issue #79](https://github.com/nbuytaert1/apex-select2/issues/79): Wrong content type of lazy loading response
+* [issue #81](https://github.com/nbuytaert1/apex-select2/issues/81): Fix Markdown
