@@ -77,13 +77,6 @@ create or replace package body select2 is
       return false;
     end is_selected_value;
   begin
-    l_lov := apex_plugin_util.get_data(
-               p_sql_statement  => p_item.lov_definition,
-               p_min_columns => gco_min_lov_cols,
-               p_max_columns => gco_max_lov_cols,
-               p_component_name => p_item.name
-             );
-
     -- print the selected LOV options in case of lazy loading or when drag and drop sorting is enabled
     if (l_lazy_loading is not null or l_drag_and_drop_sorting is not null) then
       if p_value is not null then
@@ -121,6 +114,13 @@ create or replace package body select2 is
     end if;
 
     if l_lazy_loading is null then
+      l_lov := apex_plugin_util.get_data(
+               p_sql_statement  => p_item.lov_definition,
+               p_min_columns => gco_min_lov_cols,
+               p_max_columns => gco_max_lov_cols,
+               p_component_name => p_item.name
+             );
+
       if l_lov.exists(gco_lov_group_col) then
         if l_null_optgroup_label_cmp is not null then
           l_null_optgroup := l_null_optgroup_label_cmp;
