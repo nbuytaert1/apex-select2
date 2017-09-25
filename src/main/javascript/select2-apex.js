@@ -1,8 +1,9 @@
 var beCtbSelect2 = {};
 
 beCtbSelect2.events = {
-  bind: function (pItem) {
+  bind: function (pItem, pIsIgItem) {
     var pageItem = $("" + pItem + "");
+    var igRegionId;
 
     pageItem.on("change", function(e) {
       apex.jQuery(this).trigger("slctchange", {select2: e});
@@ -34,5 +35,14 @@ beCtbSelect2.events = {
     pageItem.on("select2:unselecting", function(e) {
       apex.jQuery(this).trigger("slctunselecting", {select2: e});
     });
+
+    if (pIsIgItem) {
+      $(window).load(function() {
+        igRegionId = apex.region.findClosest(pItem).element[0].id;
+        apex.jQuery("#" + igRegionId).on('interactivegridselectionchange', function(e) {
+          pageItem.trigger("change");
+        });
+      });
+    }
   }
 };

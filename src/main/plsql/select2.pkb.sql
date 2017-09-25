@@ -248,6 +248,7 @@ create or replace package body select2 is
 
     l_display_values apex_application_global.vc_arr2;
     l_multiselect gt_string;
+    l_is_ig_item gt_string;
 
     l_item_jq gt_string := apex_plugin_util.page_item_names_to_jquery(p_item.name);
     l_cascade_parent_items_jq gt_string := apex_plugin_util.page_item_names_to_jquery(p_item.lov_cascade_parent_items);
@@ -312,7 +313,10 @@ create or replace package body select2 is
 
       -- add dropdownParent option for IG columns
       if substr(l_item_jq, 2, 1) != 'P' then
+        l_is_ig_item := 'true';
         l_code := l_code || 'dropdownParent: $("' || l_item_jq || '").parent(),';
+      else
+        l_is_ig_item := 'false';
       end if;
 
       if l_look_and_feel = 'SELECT2_CLASSIC' then
@@ -650,7 +654,7 @@ create or replace package body select2 is
       end if;
 
       l_onload_code := l_onload_code || '
-          beCtbSelect2.events.bind("' || l_item_jq || '");';
+          beCtbSelect2.events.bind("' || l_item_jq || '", ' || l_is_ig_item || ');';
 
       apex_javascript.add_onload_code(l_onload_code);
       l_render_result.is_navigable := true;
