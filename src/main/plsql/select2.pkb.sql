@@ -564,8 +564,14 @@ create or replace package body select2 is
         <select ' || l_multiselect || '
           id="' || p_item.name || '"
           name="' || apex_plugin.get_input_name_for_page_item(true) || '"
-          class="selectlist ' || p_item.element_css_classes || '"' ||
-          p_item.element_attributes || '>');
+          class="selectlist ' || p_item.element_css_classes || '"');
+
+      -- issue #85
+      if p_item.is_required then
+        htp.p(' required aria-required="true"');
+      end if;
+
+      htp.p(p_item.element_attributes || '>');
 
       if (l_select_list_type = 'SINGLE' and p_item.lov_display_null) then
         apex_plugin_util.print_option(

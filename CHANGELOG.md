@@ -105,3 +105,4 @@
 * [issue #74](https://github.com/nbuytaert1/apex-select2/issues/74): Switch to "File URLs to Load"
 * [issue #79](https://github.com/nbuytaert1/apex-select2/issues/79): Wrong content type of lazy loading response
 * [issue #81](https://github.com/nbuytaert1/apex-select2/issues/81): Fix Markdown
+* [issue #85](https://github.com/nbuytaert1/apex-select2/issues/85): Required property is not used in plugin

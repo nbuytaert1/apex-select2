@@ -28,6 +28,7 @@ More information and a demo can be found [here](http://apex.oracle.com/pls/apex/
 * [Jorge Rimblas](https://github.com/rimblas)
 * [Stijn Van Raes](https://github.com/stijnvanraes)
 * [Pavel Glebov](https://github.com/glebovpavel)
+* [Maxime Tremblay](https://github.com/maxime-tremblay)
 
 ## License
 
