@@ -211,7 +211,6 @@ begin
   end if;
 end print_lov_options;
 
-
 function render(
            p_item in apex_plugin.t_page_item,
            p_plugin in apex_plugin.t_plugin,
@@ -402,7 +401,7 @@ function render(
           type: "POST",
           dataType: "json",
           delay: 400,
-          data: function(params) {
+          data: function(params) {                  
                   return {
                     p_flow_id: $("#pFlowId").val(),
                     p_flow_step_id: $("#pFlowStepId").val(),
@@ -413,7 +412,7 @@ function render(
                     p_request: "PLUGIN=' || apex_plugin.get_ajax_identifier || '"
                   };
                 },
-          processResults: function(data, params) {
+          processResults: function(data, params) {                                 
                             var select2Data = $.map(data.row, function(obj) {
                               obj.id = obj.R;
                               obj.text = obj.D;
@@ -538,7 +537,7 @@ begin
   end if;
 
   apex_javascript.add_library(
-    p_name => 'select2.full.min',
+    p_name => 'select2.full.min',    
     p_directory => p_plugin.file_prefix,
     p_version => null
   );
@@ -636,26 +635,37 @@ begin
 
       l_onload_code := l_onload_code || '
         var item = $("' || l_item_jq || '");
-        if (' || l_optimize_refresh_condition || ') {
+        if (' || l_optimize_refresh_condition || ') {          
           item.val("").trigger("change");
         } else {';
     end if;
 
-    l_onload_code := l_onload_code || '
+    l_onload_code := l_onload_code || '          
           apex.server.plugin(
             "' || apex_plugin.get_ajax_identifier || '",
             { pageItems: "' || l_items_for_session_state_jq || '" },
             { refreshObject: "' || l_item_jq || '",
               loadingIndicator: "' || l_item_jq || '",
               loadingIndicatorPosition: "after",
-              dataType: "text",
-              success: function(pData) {
-                         var item = $("' || l_item_jq || '");
-                         item.html(pData);
-                         item.val("").trigger("change");
+              dataType: '|| case 
+                              when l_lazy_loading is not null then '"json"'
+                              else '"text"'  
+                            end ||' ,
+              success: function(pData) {                         
+                         var valBeforeRefresh = $v("' || ltrim(l_item_jq,'#')||'");   
+                         var $item = $("' || l_item_jq || '");
+                         $item.empty();
+                         '||
+                         case 
+                           when l_lazy_loading is not null then
+                            '$s("' || ltrim(l_item_jq,'#') || '",valBeforeRefresh);'
+                            --'item.select2("data", pData);'
+                           else 
+                            '$item.html(pData);                            
+                             $s("' || ltrim(l_item_jq,'#') || '",valBeforeRefresh);'      
+                          end||'
                        }
             });';
-
     if p_item.ajax_optimize_refresh then
       l_onload_code := l_onload_code || '}';
     end if;
@@ -666,11 +676,16 @@ begin
   l_onload_code := l_onload_code || '
       beCtbSelect2.events.bind("' || l_item_jq || '");';
 
+  
+  l_onload_code := l_onload_code || '
+        beCtbSelect2.main.initSelect2("' || l_item_jq || '",'||'"'|| apex_plugin.get_ajax_identifier||'","'||l_lazy_loading||'");';
+  
+
+
   apex_javascript.add_onload_code(l_onload_code);
   l_render_result.is_navigable := true;
   return l_render_result;
 end render;
-
 
 function ajax(
            p_item in apex_plugin.t_page_item,
@@ -690,8 +705,51 @@ function ajax(
   l_more_rows_boolean boolean;
 
   l_result apex_plugin.t_page_item_ajax_result;
+  
+  procedure get_data_by_id(p_delimetered_id_list in varchar2)
+  is
+    v_display_values    apex_application_global.vc_arr2;
+    v_id_list           apex_application_global.vc_arr2;
+    v_filtered_id_list  apex_application_global.vc_arr2;
+  begin
+    v_id_list := apex_util.string_to_table(p_delimetered_id_list,nvl(p_item.attribute_13,':'));
+
+    v_filtered_id_list := APEX_PLUGIN_UTIL.GET_DISPLAY_DATA (
+         p_sql_statement     => p_item.lov_definition,
+         p_min_columns       => gco_min_lov_cols,
+         p_max_columns       => gco_max_lov_cols,
+         p_component_name    => p_item.name,         
+         p_display_column_no => gco_lov_return_col,
+         p_search_column_no  => gco_lov_return_col,
+         p_search_value_list => v_id_list,
+         p_display_extra     => false); -- external values should be displayed only on page load - not when user change a value
+         --p_item.lov_display_extra 
+    
+    v_display_values := APEX_PLUGIN_UTIL.GET_DISPLAY_DATA (
+         p_sql_statement     => p_item.lov_definition,
+         p_min_columns       => gco_min_lov_cols,
+         p_max_columns       => gco_max_lov_cols,
+         p_component_name    => p_item.name,         
+         p_display_column_no => gco_lov_display_col,
+         p_search_column_no  => gco_lov_return_col,
+         p_search_value_list => v_filtered_id_list,
+         p_display_extra     => false); 
+   l_json := '[';
+   for i in 1..v_display_values.count loop 
+        l_json := l_json ||
+          '{' ||
+             apex_javascript.add_attribute('R', v_filtered_id_list(i), false, true) ||
+             apex_javascript.add_attribute('D', sys.htf.escape_sc(v_display_values(i)), false, false) ||
+          '},';
+   end loop;
+   l_json := rtrim(l_json,',')||']';
+  end get_data_by_id; 
+  
 begin
-  if apex_application.g_x03 = 'LAZY_LOAD' then
+  if apex_application.g_x06 = 'GETDATA' then
+      get_data_by_id(apex_application.g_x04);
+      sys.htp.p(nvl(l_json,' '));
+  elsif apex_application.g_x03 = 'LAZY_LOAD' then
     l_search_string := nvl(apex_application.g_x01, '%');
     l_search_page := nvl(apex_application.g_x02, 1);
     l_first_row := ((l_search_page - 1) * nvl(l_lazy_append_row_count, 0)) + 1;

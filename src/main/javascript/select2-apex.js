@@ -36,3 +36,60 @@ beCtbSelect2.events = {
     });
   }
 };
+
+beCtbSelect2.main = {
+initSelect2 : function(pSelector,lAjaxIdentifier,isLazyLoading) {   
+apex.jQuery(pSelector).each(function(index,element){
+  var $select2Item = $(element);  
+  var setVal = function(pValue, pDisplayValue) {       
+     if (!pValue) {       
+      $select2Item.val(null).trigger('change');
+    } else {        
+        if(isLazyLoading) {      
+          apex.server.plugin(lAjaxIdentifier,{
+            x04 : pValue,
+            x06 : "GETDATA",
+            dataType: "json"
+          },{
+              error: function( jqXHR,textStatus,errorThrown ) {
+                console.log("Error");
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+              }, 
+              success: function(ajaxResult) {
+                $select2Item.empty();
+                ajaxResult.forEach(function(elt,index) {               
+                  var option = new Option(elt.D,elt.R, true, true);
+                  $select2Item.append(option);
+                });
+                $select2Item.trigger('change');
+                // manually trigger the `select2:select` event
+                $select2Item.trigger({
+                  type: 'select2:select',
+                  params: { data: ajaxResult}
+                });                          
+              } 
+          }); 
+      } else {
+         select2Arr = [];
+         inputDataArr = pValue.split(':'); 
+         $select2Item.val(inputDataArr);       
+      }
+    }      
+  }; 
+  
+  // disable auto open select list by removing an option  - select2 "bugfix"
+  $select2Item.on('select2:unselecting', function() {
+    var opts = $(this).data('select2').options;
+    opts.set('disabled', true);
+    setTimeout(function() {
+        opts.set('disabled', false);
+    }, 1);
+  });    
+
+  // Register apex.item callback
+  apex.item.create($select2Item[0],{ setValue: setVal});
+});
+}
+}
