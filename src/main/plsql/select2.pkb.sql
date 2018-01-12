@@ -1,7 +1,5 @@
-create or replace package body select2 is
-
-  --subtype gt_string is varchar2(32767);
-
+create or replace PACKAGE BODY select2
+AS
 gco_min_lov_cols constant number(1) := 2;
 gco_max_lov_cols constant number(1) := 3;
 gco_lov_display_col constant number(1) := 1;
@@ -16,6 +14,22 @@ gco_starts_with_ignore_case constant char(3) := 'SIC';
 gco_starts_with_case_sensitive constant char(3) := 'SCS';
 gco_multi_word constant char(2) := 'MW';
 
+
+function is_ig(p_item_id number)
+return boolean
+is
+ v_dummy char(1);
+begin
+ select '1'
+ into v_dummy
+ from APEX_APPL_PAGE_IG_COLUMNS 
+ where column_id = p_item_id;
+ 
+ return true;
+exception
+  when no_data_found then 
+     return false;
+end is_ig;
 
 procedure print_lov_options(
             p_item in apex_plugin.t_page_item,
@@ -211,13 +225,12 @@ begin
   end if;
 end print_lov_options;
 
-function render(
-           p_item in apex_plugin.t_page_item,
-           p_plugin in apex_plugin.t_plugin,
-           p_value in gt_string,
-           p_is_readonly in boolean,
-           p_is_printer_friendly in boolean
-         ) return apex_plugin.t_page_item_render_result is
+procedure render (
+    p_item   in apex_plugin.t_page_item,
+    p_plugin in apex_plugin.t_plugin,
+    p_param  in apex_plugin.t_item_render_param,
+    p_result in out nocopy apex_plugin.t_item_render_result)
+is
   l_no_matches_msg gt_string := p_plugin.attribute_01;
   l_input_too_short_msg gt_string := p_plugin.attribute_02;
   l_selection_too_big_msg gt_string := p_plugin.attribute_03;
@@ -259,6 +272,7 @@ function render(
   l_apex_version gt_string;
   l_onload_code gt_string;
   l_render_result apex_plugin.t_page_item_render_result;
+  l_is_ig   boolean;
 
   -- local subprograms
   function get_select2_constructor
@@ -297,8 +311,26 @@ function render(
       end if;
     end if;
 
-    l_code := '
-      $("' || l_item_jq || '").select2({' ||
+    l_code := '   
+    $.fn.select2.amd.require(
+          [
+                "select2/dropdown/attachBody"
+          ],
+          function (AttachBody) {
+                AttachBody.prototype._positionDropdown = (function (originalMethod) {
+                        return function () {
+                            if ($("td.is-focused").length > 0) {
+                              this.$container = $("td.is-focused");
+                            }                              
+                            originalMethod.call(this);
+                        }                
+                }(AttachBody.prototype._positionDropdown));                
+          },
+          undefined,
+          true
+        );
+    
+      $("' || l_item_jq || '").select2({' ||        
         apex_javascript.add_attribute('placeholder', p_item.lov_null_text, false) ||
         apex_javascript.add_attribute('allowClear', l_allow_clear_bool) ||
         apex_javascript.add_attribute('minimumInputLength', to_number(l_min_input_length)) ||
@@ -393,25 +425,10 @@ function render(
                    }
                  ),';
     end if;
-
     if l_lazy_loading is not null then
       l_code := l_code || '
         ajax: {
-          url: "wwv_flow.show",
-          type: "POST",
-          dataType: "json",
-          delay: 400,
-          data: function(params) {                  
-                  return {
-                    p_flow_id: $("#pFlowId").val(),
-                    p_flow_step_id: $("#pFlowStepId").val(),
-                    p_instance: $("#pInstance").val(),
-                    x01: params.term,
-                    x02: params.page,
-                    x03: "LAZY_LOAD",
-                    p_request: "PLUGIN=' || apex_plugin.get_ajax_identifier || '"
-                  };
-                },
+          delay: 400,          
           processResults: function(data, params) {                                 
                             var select2Data = $.map(data.row, function(obj) {
                               obj.id = obj.R;
@@ -424,7 +441,21 @@ function render(
                               pagination: { more: data.more }
                             };
                           },
-          cache: true
+          cache: true,
+          transport: function (params, fSuccess, failure) {            
+            var promise = apex.server.plugin(
+            "' || apex_plugin.get_ajax_identifier || '",
+            { pageItems: "'||l_items_for_session_state_jq||'",              
+              x01: params.data.term,
+              x02: params.data.page,
+              x03: "LAZY_LOAD"
+            },              
+            { dataType: "json",
+              success: fSuccess,
+              target : "'||l_item_jq||'"
+            });
+            return promise;
+          }
         },
         escapeMarkup: function(markup) { return markup; },';
     end if;
@@ -487,12 +518,21 @@ function render(
     return l_code;
   end get_sortable_constructor;
 begin
+  -- GPV  
   if apex_application.g_debug then
-    apex_plugin_util.debug_page_item(p_plugin, p_item, p_value, p_is_readonly, p_is_printer_friendly);
+    apex_plugin_util.debug_page_item(p_plugin, p_item, p_param.value, p_param.is_readonly, p_param.is_printer_friendly);
   end if;
+  -- check if select2 is used in Interactive grid
+  l_is_ig := is_ig(p_item.id);
+  if l_is_ig then
+    -- lazy loading should alway be used for interactive grid
+    l_lazy_loading := 'Y';    
+    l_width := '100%';
+  end if;  
 
-  if (p_is_readonly or p_is_printer_friendly) then
-    apex_plugin_util.print_hidden_if_readonly(p_item.name, p_value, p_is_readonly, p_is_printer_friendly);
+  <<readonly>>
+  if (p_param.is_readonly or p_param.is_printer_friendly) then
+    apex_plugin_util.print_hidden_if_readonly(p_item.name, p_param.value, p_param.is_readonly, p_param.is_printer_friendly);
 
     begin
       l_display_values := apex_plugin_util.get_display_data(
@@ -500,7 +540,7 @@ begin
                             p_min_columns => gco_min_lov_cols,
                             p_max_columns => gco_max_lov_cols,
                             p_component_name => p_item.name,
-                            p_search_value_list => apex_util.string_to_table(p_value),
+                            p_search_value_list => apex_util.string_to_table(p_param.value),
                             p_display_extra => p_item.lov_display_extra
                           );
     exception
@@ -532,9 +572,9 @@ begin
 
       htp.p('</ul>');
     end if;
-
-    return l_render_result;
-  end if;
+    
+  end if; -- readolnly
+  
 
   apex_javascript.add_library(
     p_name => 'select2.full.min',    
@@ -586,12 +626,22 @@ begin
     );
   end if;
 
-  print_lov_options(p_item, p_plugin, p_value);
+  print_lov_options(p_item, p_plugin, p_param.value);
 
   htp.p('</select>');
+  
+  -- init l_items_for_session_state_jq used in get_select2_constructor
+  if p_item.lov_cascade_parent_items is not null then
+    l_items_for_session_state_jq := l_cascade_parent_items_jq;
 
+    if l_cascade_items_to_submit_jq is not null then
+      l_items_for_session_state_jq := l_items_for_session_state_jq || ',' || l_cascade_items_to_submit_jq;
+    end if;
+  end if;  
+  
   l_onload_code := get_select2_constructor;
-
+  
+  <<drag_and_drop_sorting>>
   if l_drag_and_drop_sorting is not null then
     select substr(version_no, 1, 3)
     into l_apex_version
@@ -609,21 +659,16 @@ begin
         p_directory => '#IMAGE_PREFIX#libraries/jquery-ui/1.10.4/ui/minified/',
         p_version => null
       );
-    end if;
+    end if; 
 
     l_onload_code := l_onload_code || get_sortable_constructor();
-  end if;
-
-  if p_item.lov_cascade_parent_items is not null then
-    l_items_for_session_state_jq := l_cascade_parent_items_jq;
-
-    if l_cascade_items_to_submit_jq is not null then
-      l_items_for_session_state_jq := l_items_for_session_state_jq || ',' || l_cascade_items_to_submit_jq;
-    end if;
-
+  end if;--drag_and_drop_sorting
+  
+  <<lov_cascade_parent_items>>
+  if p_item.lov_cascade_parent_items is not null then    
     l_onload_code := l_onload_code || '
       $("' || l_cascade_parent_items_jq || '").on("change", function(e) {';
-
+    
     if p_item.ajax_optimize_refresh then
       l_cascade_parent_items := apex_util.string_to_table(l_cascade_parent_items_jq, ',');
 
@@ -639,63 +684,65 @@ begin
           item.val("").trigger("change");
         } else {';
     end if;
-
     l_onload_code := l_onload_code || '          
-          apex.server.plugin(
-            "' || apex_plugin.get_ajax_identifier || '",
-            { pageItems: "' || l_items_for_session_state_jq || '" },
-            { refreshObject: "' || l_item_jq || '",
-              loadingIndicator: "' || l_item_jq || '",
-              loadingIndicatorPosition: "after",
-              dataType: '|| case 
-                              when l_lazy_loading is not null then '"json"'
-                              else '"text"'  
-                            end ||' ,
-              success: function(pData) {                         
-                         var valBeforeRefresh = $v("' || ltrim(l_item_jq,'#')||'");   
-                         var $item = $("' || l_item_jq || '");
-                         $item.empty();
-                         '||
-                         case 
-                           when l_lazy_loading is not null then
-                            '$s("' || ltrim(l_item_jq,'#') || '",valBeforeRefresh);'
-                            --'item.select2("data", pData);'
-                           else 
-                            '$item.html(pData);                            
-                             $s("' || ltrim(l_item_jq,'#') || '",valBeforeRefresh);'      
-                          end||'
-                       }
-            });';
+          var valBeforeRefresh = $v("' || ltrim(l_item_jq,'#')||'");
+          $s("' || ltrim(l_item_jq,'#') || '",valBeforeRefresh);';
     if p_item.ajax_optimize_refresh then
       l_onload_code := l_onload_code || '}';
     end if;
 
     l_onload_code := l_onload_code || '});';
-  end if;
+  end if; --lov_cascade_parent_items
 
-  l_onload_code := l_onload_code || '
+  l_onload_code := l_onload_code || '      
       beCtbSelect2.events.bind("' || l_item_jq || '");';
 
-  
-  l_onload_code := l_onload_code || '
-        beCtbSelect2.main.initSelect2("' || l_item_jq || '",'||'"'|| apex_plugin.get_ajax_identifier||'","'||l_lazy_loading||'");';
-  
-
+  --if l_is_ig then
+    -- do not use l_cascade_parent_items_jq in IG
+    --l_onload_code := l_onload_code || '
+      --    beCtbSelect2.main.initSelect2("' || l_item_jq || '",'||'"'|| apex_plugin.get_ajax_identifier||'","'||l_lazy_loading||'","'||l_select_list_type||'");';
+  --else
+    l_onload_code := l_onload_code || '
+          beCtbSelect2.main.initSelect2("' || l_item_jq || '",'||'"'|| apex_plugin.get_ajax_identifier||'","'||l_lazy_loading||'","'||l_select_list_type||'","'||l_items_for_session_state_jq||'");';
+  --end if;
 
   apex_javascript.add_onload_code(l_onload_code);
-  l_render_result.is_navigable := true;
-  return l_render_result;
+  l_render_result.is_navigable := true;  
 end render;
 
-function ajax(
-           p_item in apex_plugin.t_page_item,
-           p_plugin in apex_plugin.t_plugin
-         ) return apex_plugin.t_page_item_ajax_result is
+--https://ddoracle.blogspot.co.at/2006/11/print-clob-to-web.html
+procedure HtpPrn(pclob in clob) is
+ v_excel varchar2(32000);
+ v_clob clob := pclob;
+begin
+  while length(v_clob) > 0 loop
+    begin
+      if length(v_clob) > 16000 then
+         v_excel:= substr(v_clob,1,16000);
+         htp.prn(v_excel);
+         v_clob:= substr(v_clob,length(v_excel)+1);
+      else
+         v_excel := v_clob;
+         htp.prn(v_excel);
+         v_clob:='';
+         v_excel := '';
+      end if;
+    end;
+  end loop;
+end;
+ 
+procedure ajax (
+    p_item   in            apex_plugin.t_item,
+    p_plugin in            apex_plugin.t_plugin,
+    p_param  in            apex_plugin.t_item_ajax_param,
+    p_result in out nocopy apex_plugin.t_item_ajax_result )
+is
   l_select_list_type gt_string := p_item.attribute_01;
   l_search_logic gt_string := p_item.attribute_08;
   l_lazy_append_row_count gt_string := p_item.attribute_15;
 
   l_lov apex_plugin_util.t_column_value_list;
+  --l_json gt_string;
   l_json gt_string;
   l_apex_plugin_search_logic gt_string;
   l_search_string gt_string;
@@ -773,8 +820,7 @@ begin
 
     if l_search_logic = gco_multi_word then
       l_search_string := replace(l_search_string, ' ', '%');
-    end if;
-
+    end if;    
     l_lov := apex_plugin_util.get_data(
                p_sql_statement => p_item.lov_definition,
                p_min_columns => gco_min_lov_cols,
@@ -788,48 +834,58 @@ begin
                                   ),
                p_first_row => l_first_row,
                p_max_rows => l_lazy_append_row_count + 1
-             );
-
+             );    
     if l_lov(gco_lov_return_col).count = l_lazy_append_row_count + 1 then
       l_loop_count := l_lov(gco_lov_return_col).count - 1;
     else
       l_loop_count := l_lov(gco_lov_return_col).count;
     end if;
 
-    l_json := '{"row":[';
+    apex_json.initialize_clob_output;
+    apex_json.open_object; 
+    apex_json.open_array('row');    
 
     if p_item.escape_output then
       for i in 1 .. l_loop_count loop
-        l_json := l_json || '{' ||
-          apex_javascript.add_attribute('R', htf.escape_sc(l_lov(gco_lov_return_col)(i)), false, true) ||
-          apex_javascript.add_attribute('D', htf.escape_sc(l_lov(gco_lov_display_col)(i)), false, false) ||
-        '},';
+        apex_json.open_object; 
+        apex_json.write('R',htf.escape_sc(l_lov(gco_lov_return_col)(i)));
+        apex_json.write('D',htf.escape_sc(l_lov(gco_lov_display_col)(i)));
+        apex_json.close_object; 
       end loop;
     else
       for i in 1 .. l_loop_count loop
-        l_json := l_json || '{' ||
-          apex_javascript.add_attribute('R', l_lov(gco_lov_return_col)(i), false, true) ||
-          apex_javascript.add_attribute('D', l_lov(gco_lov_display_col)(i), false, false) ||
-        '},';
+        apex_json.open_object; 
+        apex_json.write('R',l_lov(gco_lov_return_col)(i));
+        apex_json.write('D',l_lov(gco_lov_display_col)(i));
+        apex_json.close_object; 
       end loop;
     end if;
-
-    l_json := rtrim(l_json, ',');
 
     if l_lov(gco_lov_return_col).exists(l_lazy_append_row_count + 1) then
       l_more_rows_boolean := true;
     else
       l_more_rows_boolean := false;
-    end if;
-
-    l_json := l_json || '],' || apex_javascript.add_attribute('more', l_more_rows_boolean, true, false) || '}';
-
-    htp.p(l_json);
+    end if;    
+    apex_json.close_array; 
+    apex_json.write('more',l_more_rows_boolean);
+    apex_json.close_all;        
+    HtpPrn(apex_json.get_clob_output);
+    apex_json.free_output;    
   else
     print_lov_options(p_item, p_plugin);
   end if;
-
-  return l_result;
 end ajax;
 
-end select2;
+procedure metadata (
+    p_item   in            apex_plugin.t_item,
+    p_plugin in            apex_plugin.t_plugin,
+    p_param  in            apex_plugin.t_item_meta_data_param,
+    p_result in out nocopy apex_plugin.t_item_meta_data_result )
+is
+begin
+    p_result.is_multi_value := true;    
+end;
+
+END select2;
+/
+

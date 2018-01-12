@@ -5,30 +5,48 @@ It supports searching, multiselection, tagging, lazy loading and infinite scroll
 
 ## About
 
-The Select2 APEX plugin is based on [Select2](https://select2.github.io/) –
-an open-source jQuery plugin that greatly improves the functionality and user-friendliness of regular select lists.
-In Oracle Application Express, the Select2 plugin can serve as a replacement for these four standard item types:
+This is a fork of great [Select2 APEX Plugin](https://github.com/nbuytaert1/apex-select2) adapted for using with *Interactive Grid*.
 
-* Select List
-* Shuttle
-* Text Field with autocomplete
-* List Manager
+A demo can be found [here](https://apex.oracle.com/pls/apex/f?p=106000).
+Sample application to analyse is located in repository. 
 
-More information and a demo can be found [here](http://apex.oracle.com/pls/apex/f?p=64237:20).
+## Installation
 
-## Blog Posts
-* August 31, 2013 – [Revamp select lists in APEX with Select2](https://apexplained.wordpress.com/2013/08/31/revamp-select-lists-in-apex-with-select2/)
-* October 30, 2013 – [What's new in the Select2 APEX plugin](https://apexplained.wordpress.com/2013/10/30/whats-new-in-the-select2-apex-plugin/)
-* January 3, 2015 – [Lazy loading in the Select2 APEX plugin](https://apexplained.wordpress.com/2015/01/03/lazy-loading-in-the-select2-apex-plugin/)
-* January 12, 2015 – [Improved the Select2 lazy loading functionality](https://apexplained.wordpress.com/2015/01/12/improved-the-select2-lazy-loading-functionality/)
-* May 31, 2016 – [Version 3.0 of the Select2 APEX plugin is out](https://apexplained.wordpress.com/2016/05/31/version-3-0-of-the-select2-apex-plugin-is-out/)
+Install SELECT2 - PL/SQL package from *\src\main\plsql*
 
-## Contributors
-* [Martin Giffy D'Souza](https://github.com/martindsouza)
-* [Jorge Rimblas](https://github.com/rimblas)
-* [Stijn Van Raes](https://github.com/stijnvanraes)
-* [Pavel Glebov](https://github.com/glebovpavel)
-* [Maxime Tremblay](https://github.com/maxime-tremblay)
+* select2.pks.sql
+* select2.pkb.sql
+
+Grant necessary rights:
+
+*GRANT EXECUTE ON SELECT2 TO #USER#;*
+
+Where *#USER#* should be replaced to APEX Application Parsing Schema.
+
+Install plugin from *\src\main\plugin*
+
+* item_type_plugin_be_ctb_select2.sql
+
+like described in [documentation](https://docs.oracle.com/cd/E59726_01/doc.50/e39147/deploy_import.htm#HTMDB26010)
+
+
+## Known issues
+
+* All columns listed in "Cascading LOV Parent Column(s)" should have Static ID's. 
+* SQL-queries referenced to the other columns should return all the data if such columns listed in "Cascading LOV Parent Column(s)" have a null value(s)
+
+   select descr,
+          id
+   from (select 'Alexander' as descr,
+         'A1' as id,
+         'A' as parent_id 
+         from dual)
+   where instr(:FIRST_LETTER,parent_id) > 0
+      or :FIRST_LETTER is null -- !important
+
+## Current version
+
+4.0.0.
 
 ## License
 

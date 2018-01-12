@@ -1,18 +1,25 @@
-create or replace package select2 is
-
+CREATE OR REPLACE PACKAGE select2
+AUTHID CURRENT_USER
+as
   subtype gt_string is varchar2(32767);
 
-  function render(
-             p_item in apex_plugin.t_page_item,
-             p_plugin in apex_plugin.t_plugin,
-             p_value in gt_string,
-             p_is_readonly in boolean,
-             p_is_printer_friendly in boolean
-           ) return apex_plugin.t_page_item_render_result;
+  procedure render (
+    p_item   in apex_plugin.t_page_item,
+    p_plugin in apex_plugin.t_plugin,
+    p_param  in apex_plugin.t_item_render_param,
+    p_result in out nocopy apex_plugin.t_item_render_result);
 
-  function ajax(
-             p_item in apex_plugin.t_page_item,
-             p_plugin in apex_plugin.t_plugin
-           ) return apex_plugin.t_page_item_ajax_result;
+  procedure ajax (
+    p_item   in            apex_plugin.t_item,
+    p_plugin in            apex_plugin.t_plugin,
+    p_param  in            apex_plugin.t_item_ajax_param,
+    p_result in out nocopy apex_plugin.t_item_ajax_result );
 
-end select2;
+  procedure metadata (
+    p_item   in            apex_plugin.t_item,
+    p_plugin in            apex_plugin.t_plugin,
+    p_param  in            apex_plugin.t_item_meta_data_param,
+    p_result in out nocopy apex_plugin.t_item_meta_data_result );    
+   
+END select2;
+/

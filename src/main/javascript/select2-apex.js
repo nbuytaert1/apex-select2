@@ -38,25 +38,20 @@ beCtbSelect2.events = {
 };
 
 beCtbSelect2.main = {
-initSelect2 : function(pSelector,lAjaxIdentifier,isLazyLoading) {   
+initSelect2 : function(pSelector,lAjaxIdentifier,isLazyLoading,selListType,pageItemsIn) {   
 apex.jQuery(pSelector).each(function(index,element){
   var $select2Item = $(element);  
+  var apexItemOpt = {};
   var setVal = function(pValue, pDisplayValue) {       
      if (!pValue) {       
       $select2Item.val(null).trigger('change');
     } else {        
         if(isLazyLoading) {      
           apex.server.plugin(lAjaxIdentifier,{
-            x04 : pValue,
-            x06 : "GETDATA",
-            dataType: "json"
+            pageItems : pageItemsIn,
+            x04 : (pValue instanceof Array) ? pValue.join(':') : pValue,
+            x06 : "GETDATA"
           },{
-              error: function( jqXHR,textStatus,errorThrown ) {
-                console.log("Error");
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
-              }, 
               success: function(ajaxResult) {
                 $select2Item.empty();
                 ajaxResult.forEach(function(elt,index) {               
@@ -69,12 +64,19 @@ apex.jQuery(pSelector).each(function(index,element){
                   type: 'select2:select',
                   params: { data: ajaxResult}
                 });                          
-              } 
+              },
+              target : pSelector,
+              dataType: "json"
           }); 
       } else {
          select2Arr = [];
-         inputDataArr = pValue.split(':'); 
-         $select2Item.val(inputDataArr);       
+         if (! (pValue instanceof Array) ) {
+             $select2Item.val(pValue.split(':'));
+         }  else {
+             $select2Item.val(pValue);
+         }
+           
+         
       }
     }      
   }; 
@@ -87,9 +89,28 @@ apex.jQuery(pSelector).each(function(index,element){
         opts.set('disabled', false);
     }, 1);
   });    
+  //init setVal function needed forsupport of  $s - APEX javascript function 
+  apexItemOpt.setValue = setVal;
+
+  if(selListType === "MULTI") {
+    // init displayValueFor function needed for dispaying correct values in IG
+    apexItemOpt.displayValueFor = function( pValue ) {
+      var data = $select2Item.select2("data");
+      var displayArr = [];
+      for(var a=0;a<pValue.length;a++) {
+          for(var i=0;i<data.length;i++) {
+            if(pValue[a] === data[i].id) {
+             displayArr.push(data[i].text);
+            }
+        }
+      }
+      return displayArr.join(", ");
+    };
+  }
+
 
   // Register apex.item callback
-  apex.item.create($select2Item[0],{ setValue: setVal});
+  apex.item.create($select2Item[0],apexItemOpt);
 });
 }
 }
