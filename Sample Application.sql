@@ -27,7 +27,7 @@ prompt APPLICATION 1340 - SELECT2 4.0.0
 -- Application Export:
 --   Application:     1340
 --   Name:            SELECT2 4.0.0
---   Date and Time:   12:49 Friday January 12, 2018
+--   Date and Time:   15:38 Monday January 15, 2018
 --   Exported By:     TODANTE@GMAIL.COM
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -120,7 +120,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'SELECT2 4.0.0'
 ,p_last_updated_by=>'TODANTE@GMAIL.COM'
-,p_last_upd_yyyymmddhh24miss=>'20180112123038'
+,p_last_upd_yyyymmddhh24miss=>'20180115153544'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>4
 ,p_ui_type_name => null
@@ -10674,7 +10674,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'N'
 ,p_cache_mode=>'NOCACHE'
 ,p_last_updated_by=>'TODANTE@GMAIL.COM'
-,p_last_upd_yyyymmddhh24miss=>'20180112123038'
+,p_last_upd_yyyymmddhh24miss=>'20180115153544'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(41902369604016467426)
@@ -10764,9 +10764,9 @@ wwv_flow_api.create_region_column(
 'order by 1',
 ')',
 'where instr(:FIRST_LETTER,parent_id) > 0 ',
-'or :FIRST_LETTER is null ',
+'or select2.is_displaying_all = ''Y'' ',
 '-- Important !',
-'-- sql-query should get all the data if :FIRST_LETTER is null ',
+'-- sql-query should get all the data if  select2.is_displaying_all = ''Y'' ',
 '-- otherwise IG clears all fields with “Cascading LOV Parent Column(s)”'))
 ,p_lov_display_extra=>true
 ,p_lov_display_null=>true
@@ -10839,9 +10839,9 @@ wwv_flow_api.create_region_column(
 'order by 1',
 ')',
 'where instr(:FIRST_LETTERS,parent_id) > 0',
-'or :FIRST_LETTERS is null',
+'or select2.is_displaying_all = ''Y'' ',
 '-- Important !',
-'-- sql-query should get all the data if :FIRST_LETTER is null ',
+'-- sql-query should get all the data if or select2.is_displaying_all = ''Y'' ',
 '-- otherwise IG clears all fields with “Cascading LOV Parent Column(s)”'))
 ,p_lov_display_extra=>true
 ,p_lov_display_null=>true

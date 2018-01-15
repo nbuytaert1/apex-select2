@@ -8,7 +8,7 @@ It supports searching, multiselection, tagging, lazy loading and infinite scroll
 This is a fork of great [Select2 APEX Plugin](https://github.com/nbuytaert1/apex-select2) adapted for using with *Interactive Grid*.
 
 A demo can be found [here](https://apex.oracle.com/pls/apex/f?p=106000).
-Sample application to analyse is located in repository. 
+Sample application to analyze is located in repository. 
 
 ## Installation
 
@@ -33,7 +33,9 @@ like described in [documentation](https://docs.oracle.com/cd/E59726_01/doc.50/e3
 ## Known issues
 
 * All columns listed in "Cascading LOV Parent Column(s)" should have Static ID's. 
-* SQL-queries referenced to the other columns should return all the data if such columns listed in "Cascading LOV Parent Column(s)" have a null value(s)
+* SQL-queries referenced to the other columns in "Cascading LOV Parent Column(s)" should 
+  return all the data  if select2.is_displaying_all = 'Y'.
+  Otherwise IG clears all field with "Cascading LOV Parent Column(s)" by editiong.
 
    select descr,
           id
@@ -42,7 +44,7 @@ like described in [documentation](https://docs.oracle.com/cd/E59726_01/doc.50/e3
          'A' as parent_id 
          from dual)
    where instr(:FIRST_LETTER,parent_id) > 0
-      or :FIRST_LETTER is null -- !important
+      or select2.is_displaying_all = 'Y' 
 
 ## Current version
 

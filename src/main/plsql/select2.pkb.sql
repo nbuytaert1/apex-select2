@@ -884,7 +884,18 @@ procedure metadata (
 is
 begin
     p_result.is_multi_value := true;    
-end;
+end metadata;
+
+function is_displaying_all
+return char
+is
+begin
+  if apex_application.g_x06 = 'GETDATA' then
+    return 'Y';
+  else
+   return 'N';
+  end if;
+end is_displaying_all;
 
 END select2;
 /

@@ -20,6 +20,10 @@ as
     p_plugin in            apex_plugin.t_plugin,
     p_param  in            apex_plugin.t_item_meta_data_param,
     p_result in out nocopy apex_plugin.t_item_meta_data_result );    
+  
+  function is_displaying_all
+  return char;
+
    
 END select2;
 /
