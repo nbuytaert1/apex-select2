@@ -92,6 +92,10 @@ apex.jQuery(pSelector).each(function(index,element){
   //init setVal function needed forsupport of  $s - APEX javascript function 
   apexItemOpt.setValue = setVal;
 
+  apexItemOpt.getPopupSelector = function() {
+    return '.select2-dropdown';
+  };
+
   if(selListType === "MULTI") {
     // init displayValueFor function needed for dispaying correct values in IG
     apexItemOpt.displayValueFor = function( pValue ) {
