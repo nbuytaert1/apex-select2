@@ -1,3 +1,10 @@
+#
+# Project is frozen because i don't have time for it. -( 
+# Sorry...
+#
+
+
+
 # Select2 APEX Plugin
 
 The Select2 plugin is a jQuery based replacement for select lists in Oracle Application Express.
